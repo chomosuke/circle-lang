@@ -1,3 +1,5 @@
+const SRC: &'static str = ""
+
 fn main() {
-    println!("Hello, world!");
+
 }
