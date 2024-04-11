@@ -1,18 +1,15 @@
+#[derive(Clone, Copy, Debug)]
 pub struct Pos {
     pub line: usize,
     pub column: usize,
 }
 
+#[derive(Debug)]
 pub struct Info {
-    pos: Pos,
+    pub pos: Pos,
 }
 
+#[derive(Debug)]
 pub enum Diagnostics {
     Error { info: Info, msg: String },
-}
-
-impl Info {
-    fn new(pos: Pos) -> Self {
-        Self { pos }
-    }
 }

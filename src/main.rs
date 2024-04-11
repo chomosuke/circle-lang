@@ -1,9 +1,11 @@
+#![feature(let_chains)]
 use std::{fs, path::PathBuf};
 
 use clap::Parser;
 
 mod diagnostics;
 mod lexer;
+mod number;
 
 #[derive(Parser)]
 struct Args {
