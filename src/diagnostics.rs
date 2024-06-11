@@ -13,3 +13,15 @@ pub struct Info {
 pub enum Diagnostics {
     Error { info: Info, msg: String },
 }
+
+trait ToDiagnosticsError {
+    
+}
+
+impl Into<Diagnostics> for String {
+    fn into(self) -> Diagnostics {
+        Diagnostics::Error {
+
+        }
+    }
+}

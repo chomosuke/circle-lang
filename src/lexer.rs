@@ -29,7 +29,7 @@ enum PartialToken {
     Number(String),
 }
 
-fn complete_token(partial: PartialToken, pos: Pos) -> Result<Token, Diagnostics> {
+fn complete_token(partial: PartialToken) -> Result<TokenKind, String> {
     let kind = match partial {
         PartialToken::OpenBracket(n) => {
             if n == 1 {
@@ -37,13 +37,10 @@ fn complete_token(partial: PartialToken, pos: Pos) -> Result<Token, Diagnostics>
             } else if n == 2 {
                 TokenKind::OpenBracket2
             } else {
-                return Err(Diagnostics::Error {
-                    info: diagnostics::Info { pos },
-                    msg: format!(
-                        r#"Found {n} consecutive "(".
+                return Err(format!(
+                    r#"Found {n} consecutive "(".
 If you intend to have multiple "(" or "((", please seperate them with whitespace."#
-                    ),
-                });
+                ));
             }
         }
         PartialToken::CloseBracket(n) => {
@@ -52,24 +49,18 @@ If you intend to have multiple "(" or "((", please seperate them with whitespace
             } else if n == 2 {
                 TokenKind::CloseBracket2
             } else {
-                return Err(Diagnostics::Error {
-                    info: diagnostics::Info { pos },
-                    msg: format!(
-                        r#"Found {n} consecutive ")".
+                return Err(format!(
+                    r#"Found {n} consecutive ")".
 If you intend to have multiple ")" or "))" please seperate them with whitespace."#
-                    ),
-                });
+                ));
             }
         }
         PartialToken::Comment(content) => TokenKind::Comment(content),
         PartialToken::Assign => TokenKind::Assign,
-        PartialToken::Name(str) => TokenKind::Number(Number::from_name(str)),
-        PartialToken::Number(str) => TokenKind::Number(Number::from_string(str)),
+        PartialToken::Name(str) => TokenKind::Number(Number::from_name(str)?),
+        PartialToken::Number(str) => TokenKind::Number(Number::from_string(str)?),
     };
-    Ok(Token {
-        info: diagnostics::Info { pos },
-        kind,
-    })
+    Ok(kind)
 }
 
 fn start_token(c: char, pos: Pos) -> Result<Option<(PartialToken, Pos)>, Diagnostics> {
@@ -106,7 +97,10 @@ pub fn process(src: &str) -> Result<Vec<Token>, Diagnostics> {
             Some((partial_token, pos)) => match partial_token {
                 PartialToken::Comment(mut content) => {
                     if c == '\n' {
-                        tokens.push(complete_token(PartialToken::Comment(content), pos)?);
+                        tokens
+                            .push(complete_token(PartialToken::Comment(content)).map_err(
+                                Diagnostics::error_from_info(diagnostics::Info { pos }),
+                            )?);
                         start_token(c, pos)?
                     } else {
                         content.push(c);
