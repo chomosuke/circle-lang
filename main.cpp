@@ -1,8 +1,7 @@
+#include <boost/program_options.hpp>
 #include <iostream>
-#include <boost>
 
 int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        std::cout << "Incorrect usage, ";
-    }
+    std::cout << __cplusplus << std::endl;
+    std::cout << "Hello World!" << std::endl;
 }
