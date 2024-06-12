@@ -10,6 +10,6 @@ project(circle-lang)
 
 find_package(boost_program_options REQUIRED CONFIG)
 
-add_executable(circle-lang main.cpp)
+add_executable(circle-lang src/main.cpp)
 
 target_link_libraries(circle-lang PRIVATE Boost::program_options)
