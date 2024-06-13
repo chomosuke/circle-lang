@@ -1,6 +1,7 @@
+#include <boost/program_options.hpp>
 #include "stdincludes.hpp"
 
-#include <boost/program_options.hpp>
+import hello_module;
 
 namespace po = boost::program_options;
 
@@ -10,6 +11,8 @@ constexpr char src_file[]{"src-file"};
 } // namespace o
 
 int main(int argc, char* argv[]) {
+    hello_module();
+
     // Declare the supported options.
     po::options_description visible;
     visible.add_options()(o::help, "produce this help message");
@@ -35,4 +38,6 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    // string src_file = vm[o::src_file];
+    
 }

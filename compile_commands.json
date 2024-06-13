@@ -1,7 +1,0 @@
-[
-{
-  "directory": "/home/rli43/code/circle-lang/build",
-  "command": "/usr/bin/clang++-18 -DBOOST_CONTAINER_NO_LIB -DBOOST_CONTAINER_STATIC_LINK -DBOOST_PROGRAM_OPTIONS_NO_LIB -DBOOST_PROGRAM_OPTIONS_STATIC_LINK -isystem /home/rli43/code/circle-lang/build/vcpkg_installed/x64-linux/include -std=gnu++2b -o CMakeFiles/circle-lang.dir/src/main.cpp.o -c /home/rli43/code/circle-lang/src/main.cpp",
-  "file": "/home/rli43/code/circle-lang/src/main.cpp"
-}
-]
