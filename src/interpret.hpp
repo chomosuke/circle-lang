@@ -1,0 +1,5 @@
+#pragma once
+#include <string>
+
+void interpret(const std::string& src_code, const std::istream& in,
+               const std::ostream& out, const std::ostream& err);

@@ -1,5 +1,6 @@
 {
   "dependencies": [
-    "boost-program-options"
+    "boost-program-options",
+    "gtest"
   ]
 }
