@@ -9,12 +9,10 @@ project(circle-lang)
 
 find_package(boost_program_options REQUIRED CONFIG)
 
-file(GLOB_RECURSE src "src/*.cpp")
-
+file(GLOB_RECURSE src src/*.cppm src/main.cpp)
 add_executable(circle-lang ${src})
 
-file(GLOB main "src/main.cpp")
-list(REMOVE_ITEM src ${main})
-target_sources(circle-lang PUBLIC FILE_SET cxx_modules TYPE CXX_MODULES FILES ${src})
+file(GLOB_RECURSE modules src/*.cppm)
+target_sources(circle-lang PUBLIC FILE_SET cxx_modules TYPE CXX_MODULES FILES ${modules})
 
 target_link_libraries(circle-lang PRIVATE Boost::program_options)

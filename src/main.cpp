@@ -37,7 +37,4 @@ int main(int argc, char* argv[]) {
         cout << "usage: circle-lang <source file>\n" << visible;
         return 1;
     }
-
-    // string src_file = vm[o::src_file];
-    
 }
