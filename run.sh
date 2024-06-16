@@ -7,4 +7,5 @@ if [ $exitcode -ne 0 ]; then
 	echo -e "${RED}compilation failed${NC}"
 	exit 1
 fi
+echo "compiled"
 ./build/circle-lang "$@"

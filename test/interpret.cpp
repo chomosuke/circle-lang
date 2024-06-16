@@ -1,7 +1,6 @@
 #include "../lib/interpret.hpp"
 #include <gtest/gtest.h>
 
-// Demonstrate some basic assertions.
 TEST(Interpret, HelloWorld) {
     std::stringstream ss{};
     std::stringstream s_bin{};
