@@ -1,8 +1,7 @@
-#include <iostream>
+#include <ostream>
 #include <string>
 
-void interpret(const std::string& src_code, const std::istream& in,
-               const std::ostream& out, const std::ostream& err) {
-    std::cout << "Hello interpreter" << std::endl;
+void interpret(const std::string& src_code, std::istream& in, std::ostream& out,
+               std::ostream& err) {
+    out << "Hello interpreter" << std::endl;
 }
-
