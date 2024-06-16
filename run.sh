@@ -1,5 +1,5 @@
 #!/bin/bash
-cmake --build build
+cmake --build build --target circle-lang
 exitcode=$?
 RED='\033[0;31m'
 NC='\033[0m'
