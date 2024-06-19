@@ -1,11 +1,12 @@
 #pragma once
 
+#include "diagnostic.hpp"
 #include "number.hpp"
 #include <string>
 #include <tl/expected.hpp>
 #include <variant>
 
-namespace Token {
+namespace token {
     struct OpenBracket {};
     struct OpenBracket2 {};
     struct CloseBracket {};
@@ -14,13 +15,30 @@ namespace Token {
         std::string content{};
     };
     struct Assign {};
-    struct NumberT {
-        Number value{};
+    struct Number {
+        ::Number value{};
     };
+    struct Plus {};
+    struct Minus {};
+    struct Multiply {};
+    struct Divide {};
+    struct BoolAnd {};
+    struct BoolOr {};
+    struct Equal {};
+    struct NotEqual {};
+    struct Smaller {};
+    struct SmallerOrEqual {};
+    struct Greater {};
+    struct GreaterOrEqual {};
 
-    using Kind = std::variant<OpenBracket, OpenBracket2, CloseBracket,
-                              CloseBracket2, Comment, Assign, NumberT>;
-} // namespace Token
+    using Kind = std::variant<OpenBracket, OpenBracket2, CloseBracket, CloseBracket2, Comment,
+                              Assign, Number, Plus, Minus, Multiply, Divide, BoolAnd, BoolOr, Equal,
+                              NotEqual, Smaller, SmallerOrEqual, Greater, GreaterOrEqual>;
 
-tl::expected<std::vector<Token::Kind>, std::string>
-lex(const std::string& src_code);
+    struct Token {
+        Kind kind{};
+        diagnostic::Range range{};
+    };
+} // namespace token
+
+tl::expected<std::vector<token::Token>, std::string> lex(const std::string& src_code);

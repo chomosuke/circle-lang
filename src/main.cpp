@@ -6,8 +6,8 @@
 namespace po = boost::program_options;
 
 namespace o {
-constexpr char help[]{"help"};
-constexpr char src_file[]{"src-file"};
+    constexpr char help[]{"help"};
+    constexpr char src_file[]{"src-file"};
 } // namespace o
 
 int main(int argc, char* argv[]) {
@@ -26,11 +26,7 @@ int main(int argc, char* argv[]) {
     p.add(o::src_file, 1);
 
     po::variables_map vm;
-    po::store(po::command_line_parser(argc, argv)
-                  .options(options)
-                  .positional(p)
-                  .run(),
-              vm);
+    po::store(po::command_line_parser(argc, argv).options(options).positional(p).run(), vm);
     po::notify(vm);
 
     if (vm.count(o::help) > 0 || src_fname == "") {
