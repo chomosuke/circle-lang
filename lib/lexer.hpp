@@ -16,7 +16,7 @@ namespace token {
     };
     struct Assign {};
     struct Number {
-        ::Number value{};
+        number::Value value{};
     };
     struct Plus {};
     struct Minus {};

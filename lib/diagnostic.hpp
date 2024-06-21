@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace diagnostic {
     // Zero indexed
     struct Position {
@@ -10,5 +12,10 @@ namespace diagnostic {
     struct Range {
         Position start{};
         Position end{};
+    };
+
+    struct Diagnostic {
+        Range range{};
+        std::string message{};
     };
 } // namespace diagnostic

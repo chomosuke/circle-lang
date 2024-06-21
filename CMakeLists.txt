@@ -19,6 +19,8 @@ add_library(lib STATIC ${lib})
 find_package(tl-expected CONFIG REQUIRED)
 target_link_libraries(lib PRIVATE tl::expected)
 
+target_include_directories(lib PRIVATE "vendor/")
+
 
 file(GLOB_RECURSE src CONFIGURE_DEPENDS "src/*.cpp")
 add_executable(circle-lang ${src})

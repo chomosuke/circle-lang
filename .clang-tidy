@@ -12,6 +12,10 @@ Checks: >
   modernize-*,
   -modernize-use-trailing-return-type,
   performance-*,
+  readability-*,
+  -readability-identifier-length,
+  -readability-else-after-return,
+  -readability-redundant-member-init,
   readability-identifier-naming,
 
 CheckOptions:
