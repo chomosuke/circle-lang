@@ -12,11 +12,11 @@ namespace token {
     struct CloseBracket {};
     struct CloseBracket2 {};
     struct Comment {
-        std::string content{};
+        std::string content;
     };
     struct Assign {};
     struct Number {
-        number::Value value{};
+        number::Value value;
     };
     struct Plus {};
     struct Minus {};
@@ -36,8 +36,8 @@ namespace token {
                               NotEqual, Smaller, SmallerOrEqual, Greater, GreaterOrEqual>;
 
     struct Token {
-        Kind kind{};
-        diagnostic::Range range{};
+        Kind kind;
+        diagnostic::Range range;
     };
 } // namespace token
 

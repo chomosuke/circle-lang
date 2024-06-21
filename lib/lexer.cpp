@@ -45,7 +45,7 @@ namespace partial {
 
     class Comment : public Token {
       private:
-        std::stringstream m_content{};
+        std::stringstream m_content;
 
       public:
         NextState read_char(char c) override;
@@ -53,7 +53,7 @@ namespace partial {
 
     class Number : public Token {
       private:
-        std::stringstream m_content{};
+        std::stringstream m_content;
 
       public:
         explicit Number(char c) : m_content{std::string{c}} {}
@@ -62,7 +62,7 @@ namespace partial {
 
     class Operator : public Token {
       private:
-        std::stringstream m_content{};
+        std::stringstream m_content;
 
       public:
         explicit Operator(char c) : m_content{std::string{c}} {}
@@ -151,7 +151,7 @@ namespace partial {
             m_content << c;
             return std::nullopt;
         } else {
-            return std::make_pair(new_partial(c), token::Number{.value{}});
+            return std::make_pair(new_partial(c), token::Number{.value{"hehe"}});
         }
     }
 
