@@ -1,4 +1,4 @@
-#include "../lib/interpret.hpp"
+#include "lib/interpret.hpp"
 #include <boost/program_options.hpp>
 #include <fstream>
 #include <iostream>

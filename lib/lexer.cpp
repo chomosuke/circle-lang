@@ -9,6 +9,7 @@
 
 namespace partial {
     class Token;
+
     using NextState = std::pair<std::unique_ptr<Token>, std::optional<::token::Kind>>;
     using ReadCharResult = tl::expected<std::optional<NextState>, std::string>;
 
@@ -19,7 +20,7 @@ namespace partial {
         Token(Token&&) = default;
         Token& operator=(const Token&) = default;
         Token& operator=(Token&&) = default;
-        virtual ReadCharResult read_char(char);
+        virtual ReadCharResult read_char(char) = 0;
         virtual ~Token() = default;
     };
 
@@ -106,9 +107,8 @@ namespace partial {
     }
 
     inline ReadCharResult state_with_new_partial(char c, std::optional<token::Kind>&& token) {
-        return new_partial(c).map([token](std::unique_ptr<Token> p) -> std::optional<NextState> {
-            return std::make_pair(std::move(p), token);
-        });
+        return new_partial(c).map(
+            [token](std::unique_ptr<Token> p) { return std::make_pair(std::move(p), token); });
     }
 
     ReadCharResult WhiteSpace::read_char(char c) {
@@ -122,8 +122,7 @@ namespace partial {
     ReadCharResult OpenBracket::read_char(char c) {
         if (c == '(') {
             m_count++;
-            ReadCharResult r = std::nullopt;
-            return std::move(r);
+            return std::nullopt;
         } else {
             switch (m_count) {
             case 1:
