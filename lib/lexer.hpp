@@ -14,10 +14,10 @@ namespace token {
     struct Comment {
         std::string content;
     };
-    struct Assign {};
     struct Number {
         number::Value value;
     };
+    struct Assign {};
     struct Plus {};
     struct Minus {};
     struct Multiply {};
@@ -32,13 +32,13 @@ namespace token {
     struct GreaterOrEqual {};
 
     using Kind = std::variant<OpenBracket, OpenBracket2, CloseBracket, CloseBracket2, Comment,
-                              Assign, Number, Plus, Minus, Multiply, Divide, BoolAnd, BoolOr, Equal,
+                              Number, Assign, Plus, Minus, Multiply, Divide, BoolAnd, BoolOr, Equal,
                               NotEqual, Smaller, SmallerOrEqual, Greater, GreaterOrEqual>;
 
     struct Token {
-        Kind kind;
         diagnostic::Range range;
+        Kind kind;
     };
 } // namespace token
 
-tl::expected<std::vector<token::Token>, std::string> lex(const std::string& src_code);
+tl::expected<std::vector<token::Token>, diagnostic::Diagnostic> lex(const std::string& src_code);

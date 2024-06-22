@@ -1,6 +1,4 @@
-#include "../lib/lexer.hpp"
+#include "lib/lexer.cpp"
 #include <gtest/gtest.h>
 
-TEST(Interpret, HelloWorld) {
-	
-	lex(); }
+TEST(Interpret, HelloWorld) {}

@@ -1,4 +1,4 @@
-#include "../lib/interpret.hpp"
+#include "lib/interpret.cpp"
 #include <gtest/gtest.h>
 
 TEST(Interpret, HelloWorld) {

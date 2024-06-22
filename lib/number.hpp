@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BigInt.hpp"
+#include "vendor/BigInt.hpp"
 #include <vector>
 
 namespace number {

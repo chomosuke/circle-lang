@@ -29,7 +29,7 @@ way:
 - Anonymous function are written as s expressions, which are circular, so they
   are executed as loops, with the first element treated and the condition for
   the loop.
-- There are operators: + - * / && || = < > <= >= <>
+- There are operators: + - * / && || = != < > <= >=
 - Index out of bound just returns 1.
 - Commands:
     - input

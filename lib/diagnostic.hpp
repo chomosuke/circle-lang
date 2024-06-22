@@ -5,8 +5,8 @@
 namespace diagnostic {
     // Zero indexed
     struct Position {
-        int column;
         int line;
+        int column;
     };
 
     struct Range {

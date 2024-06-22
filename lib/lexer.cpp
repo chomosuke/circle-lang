@@ -1,5 +1,7 @@
 #include "lexer.hpp"
 #include "number.hpp"
+#include <array>
+#include <climits>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -7,9 +9,8 @@
 
 namespace partial {
     class Token;
-    using NextState =
-        tl::expected<std::optional<std::pair<std::unique_ptr<Token>, std::optional<::token::Kind>>>,
-                     std::string>;
+    using NextState = std::pair<std::unique_ptr<Token>, std::optional<::token::Kind>>;
+    using ReadCharResult = tl::expected<std::optional<NextState>, std::string>;
 
     class Token {
       public:
@@ -18,13 +19,13 @@ namespace partial {
         Token(Token&&) = default;
         Token& operator=(const Token&) = default;
         Token& operator=(Token&&) = default;
-        virtual NextState read_char(char);
+        virtual ReadCharResult read_char(char);
         virtual ~Token() = default;
     };
 
     class WhiteSpace : public Token {
       public:
-        NextState read_char(char c) override;
+        ReadCharResult read_char(char c) override;
     };
 
     class OpenBracket : public Token {
@@ -32,7 +33,7 @@ namespace partial {
         int m_count{1};
 
       public:
-        NextState read_char(char c) override;
+        ReadCharResult read_char(char c) override;
     };
 
     class CloseBracket : public Token {
@@ -40,7 +41,7 @@ namespace partial {
         int m_count{1};
 
       public:
-        NextState read_char(char c) override;
+        ReadCharResult read_char(char c) override;
     };
 
     class Comment : public Token {
@@ -48,7 +49,7 @@ namespace partial {
         std::stringstream m_content;
 
       public:
-        NextState read_char(char c) override;
+        ReadCharResult read_char(char c) override;
     };
 
     class Number : public Token {
@@ -57,7 +58,7 @@ namespace partial {
 
       public:
         explicit Number(char c) : m_content{std::string{c}} {}
-        NextState read_char(char c) override;
+        ReadCharResult read_char(char c) override;
     };
 
     class Operator : public Token {
@@ -66,10 +67,22 @@ namespace partial {
 
       public:
         explicit Operator(char c) : m_content{std::string{c}} {}
-        NextState read_char(char c) override;
+        ReadCharResult read_char(char c) override;
     };
 
-    inline std::unique_ptr<Token> new_partial(char c) {
+    consteval std::array<bool, CHAR_MAX> operator_char_set() {
+        std::array<bool, CHAR_MAX> lookup{};
+        std::string char_set{"+-*/&|=<>:"};
+        for (auto c : char_set) {
+            lookup[c] = true; // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+        }
+        return lookup;
+    }
+    bool is_in_operator_char_set(char c) {
+        return operator_char_set()[c]; // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+    }
+
+    inline tl::expected<std::unique_ptr<Token>, std::string> new_partial(char c) {
         if (std::isspace(c) != 0) {
             return std::make_unique<WhiteSpace>();
         } else {
@@ -83,60 +96,67 @@ namespace partial {
             default:
                 if (number::is_in_char_set(c)) {
                     return std::make_unique<Number>(c);
-                } else {
+                } else if (is_in_operator_char_set(c)) {
                     return std::make_unique<Operator>(c);
+                } else {
+                    return tl::unexpected(std::format("\'{}\' is not a valid character.", c));
                 }
             }
         }
     }
 
-    NextState WhiteSpace::read_char(char c) {
+    inline ReadCharResult state_with_new_partial(char c, std::optional<token::Kind>&& token) {
+        return new_partial(c).map([token](std::unique_ptr<Token> p) -> std::optional<NextState> {
+            return std::make_pair(std::move(p), token);
+        });
+    }
+
+    ReadCharResult WhiteSpace::read_char(char c) {
         if (std::isspace(c) != 0) {
-            return std::nullopt;
+            return std::optional<NextState>(std::nullopt);
         } else {
-            return std::make_pair(new_partial(c), std::nullopt);
+            return state_with_new_partial(c, std::nullopt);
         }
     }
 
-    NextState OpenBracket::read_char(char c) {
+    ReadCharResult OpenBracket::read_char(char c) {
         if (c == '(') {
             m_count++;
-            return std::nullopt;
+            ReadCharResult r = std::nullopt;
+            return std::move(r);
         } else {
             switch (m_count) {
             case 1:
-                return std::make_pair(new_partial(c), token::OpenBracket{});
+                return state_with_new_partial(c, token::OpenBracket{});
             case 2:
-                return std::make_pair(new_partial(c), token::OpenBracket2{});
+                return state_with_new_partial(c, token::OpenBracket2{});
             default:
-                std::stringstream err_msg{};
-                err_msg << "\"" << std::string(m_count, '(') << "\""
-                        << " is too many \'(\' in a row. Try splitting them up with space.";
-                return tl::unexpected(err_msg.str());
+                return tl::unexpected(std::format(
+                    R"("{}" is too many '(' in a row. Try splitting them up with space.)",
+                    std::string(m_count, '(')));
             }
         }
     }
 
-    NextState CloseBracket::read_char(char c) {
+    ReadCharResult CloseBracket::read_char(char c) {
         if (c == ')') {
             m_count++;
             return std::nullopt;
         } else {
             switch (m_count) {
             case 1:
-                return std::make_pair(new_partial(c), token::CloseBracket{});
+                return state_with_new_partial(c, token::CloseBracket{});
             case 2:
-                return std::make_pair(new_partial(c), token::CloseBracket2{});
+                return state_with_new_partial(c, token::CloseBracket2{});
             default:
-                std::stringstream err_msg{};
-                err_msg << "\"" << std::string(m_count, ')') << "\""
-                        << " is too many \')\' in a row. Try splitting them up with space.";
-                return tl::unexpected(err_msg.str());
+                return tl::unexpected(std::format(
+                    R"("{}" is too many ')' in a row. Try splitting them up with space.)",
+                    std::string(m_count, ')')));
             }
         }
     }
 
-    NextState Comment::read_char(char c) {
+    ReadCharResult Comment::read_char(char c) {
         if (c == '\n') {
             return std::make_pair(std::make_unique<WhiteSpace>(),
                                   token::Comment{.content{m_content.str()}});
@@ -146,31 +166,92 @@ namespace partial {
         }
     }
 
-    NextState Number::read_char(char c) {
+    ReadCharResult Number::read_char(char c) {
         if (number::is_in_char_set(c)) {
             m_content << c;
             return std::nullopt;
         } else {
-            return std::make_pair(new_partial(c), token::Number{.value{"hehe"}});
+            return state_with_new_partial(c, token::Number{.value{m_content.str()}});
         }
     }
 
-    // NextState Operator::
+    ReadCharResult
+    Operator::read_char(char c) { // NOLINT(readability-function-cognitive-complexity)
+        if (is_in_operator_char_set(c)) {
+            m_content << c;
+            return std::nullopt;
+        } else {
+            token::Kind op;
+            auto content = m_content.str();
+            if (content == ":=") {
+                return state_with_new_partial(c, token::Assign{});
+            }
+            if (content == "+") {
+                return state_with_new_partial(c, token::Plus{});
+            }
+            if (content == "-") {
+                return state_with_new_partial(c, token::Minus{});
+            }
+            if (content == "*") {
+                return state_with_new_partial(c, token::Multiply{});
+            }
+            if (content == "/") {
+                return state_with_new_partial(c, token::Divide{});
+            }
+            if (content == "&&") {
+                return state_with_new_partial(c, token::BoolAnd{});
+            }
+            if (content == "||") {
+                return state_with_new_partial(c, token::BoolOr{});
+            }
+            if (content == "=") {
+                return state_with_new_partial(c, token::Equal{});
+            }
+            if (content == "!=") {
+                return state_with_new_partial(c, token::NotEqual{});
+            }
+            if (content == "<") {
+                return state_with_new_partial(c, token::Smaller{});
+            }
+            if (content == "<=") {
+                return state_with_new_partial(c, token::SmallerOrEqual{});
+            }
+            if (content == ">") {
+                return state_with_new_partial(c, token::Greater{});
+            }
+            if (content == ">=") {
+                return state_with_new_partial(c, token::GreaterOrEqual{});
+            }
+            return tl::unexpected(std::format("\"{}\" is not a valid operator.", m_content.str()));
+        }
+    }
 } // namespace partial
 
 tl::expected<std::vector<token::Token>, diagnostic::Diagnostic> lex(const std::string& src_code) {
     std::vector<token::Token> tokens{};
     std::unique_ptr<partial::Token> partial{std::make_unique<partial::WhiteSpace>()};
-    diagnostic::Range range{};
+    diagnostic::Range range{.start{.line{0}, .column{0}}, .end{.line{0}, .column{0}}};
     for (const char& c : src_code) {
         if (c == '\n') {
+            range.end.column = 0;
+            range.end.line++;
+        } else {
+            range.end.column++;
         }
-        auto next_state = partial->read_char(c);
-        if (next_state) {
-            partial = std::move(next_state->first);
-            if (next_state->second) {
-                tokens.push_back(token::Token{.kind{*next_state->second}, .range{}});
+        auto maybe_next_state = partial->read_char(c);
+        if (maybe_next_state) {
+            auto next_state = std::move(*maybe_next_state);
+            if (next_state) {
+                partial = std::move(next_state->first);
+                if (next_state->second) {
+                    tokens.push_back(token::Token{.range{range}, .kind{*next_state->second}});
+                }
+                range.start = range.end;
             }
+        } else {
+            return tl::unexpected(
+                diagnostic::Diagnostic{.range{range}, .message{maybe_next_state.error()}});
         }
     }
+    return tokens;
 }
