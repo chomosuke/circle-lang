@@ -7,8 +7,10 @@ namespace number {
     }
 
     std::string lexicographically_minimal_rotation(std::string_view str) {
-        
+        return std::string(str);
     }
 
-    Value::Value(std::string letters) {}
+    Value::Value(std::string letters) {
+        
+    }
 } // namespace number

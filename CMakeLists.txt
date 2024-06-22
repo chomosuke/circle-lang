@@ -15,8 +15,13 @@ project(circle-lang LANGUAGES CXX)
 include_directories("./")
 
 
+file(GLOB_RECURSE vendor CONFIGURE_DEPENDS "vendor/*.cpp")
+add_library(vendor STATIC ${vendor})
+
+
 file(GLOB_RECURSE lib CONFIGURE_DEPENDS "lib/*.cpp")
 add_library(lib STATIC ${lib})
+target_link_libraries(lib PRIVATE vendor)
 
 find_package(tl-expected CONFIG REQUIRED)
 target_link_libraries(lib PRIVATE tl::expected)
@@ -38,6 +43,8 @@ target_link_libraries(all_tests PRIVATE lib)
 
 find_package(GTest CONFIG REQUIRED)
 target_link_libraries(all_tests PRIVATE GTest::gtest_main)
+
+target_compile_options(all_tests PRIVATE -g)
 
 include(GoogleTest)
 gtest_discover_tests(all_tests)

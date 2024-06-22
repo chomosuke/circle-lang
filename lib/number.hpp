@@ -1,6 +1,6 @@
 #pragma once
 
-// #include "vendor/BigInt.hpp"
+#include "vendor/BigInt.hpp"
 #include <string>
 #include <vector>
 
@@ -9,8 +9,8 @@ namespace number {
 
     class Value {
       private:
-        // std::vector<BigInt> m_numerator;
-        // std::vector<BigInt> m_denominator;
+        std::vector<BigInt> m_numerator;
+        std::vector<BigInt> m_denominator;
 
       public:
         explicit Value(std::string letters);
