@@ -1,6 +1,6 @@
 #!/bin/bash
 while true; do
-	cmake --build build --target all_tests
+	cmake --build build --target all-tests
 	exitcode=$?
 	RED='\033[0;31m'
 	NC='\033[0m'

@@ -37,14 +37,14 @@ target_link_libraries(circle-lang PRIVATE Boost::program_options)
 
 enable_testing()
 
-file(GLOB_RECURSE all_tests CONFIGURE_DEPENDS "test/*.cpp")
-add_executable(all_tests ${all_tests})
-target_link_libraries(all_tests PRIVATE lib)
+file(GLOB_RECURSE all-tests CONFIGURE_DEPENDS "test/*.cpp")
+add_executable(all-tests ${all-tests})
+target_link_libraries(all-tests PRIVATE lib)
 
 find_package(GTest CONFIG REQUIRED)
-target_link_libraries(all_tests PRIVATE GTest::gtest_main)
+target_link_libraries(all-tests PRIVATE GTest::gtest_main)
 
-target_compile_options(all_tests PRIVATE -g)
+target_compile_options(all-tests PRIVATE -g)
 
 include(GoogleTest)
-gtest_discover_tests(all_tests)
+gtest_discover_tests(all-tests)
