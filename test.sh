@@ -8,8 +8,8 @@ while true; do
 		echo -e "${RED}compilation failed${NC}"
 	else
 		# cmake --build build --target test
-		./build/all_tests
+		./build/all-tests
 	fi
 
-	inotifywait -e modify,create,delete -r ./lib/ ./test/
+	inotifywait -e modify,create,delete -r ./
 done
