@@ -1,7 +1,7 @@
 #pragma once
 
 #include "vendor/BigInt.hpp"
-#include <string>
+#include <string_view>
 #include <vector>
 
 namespace number {
@@ -13,6 +13,6 @@ namespace number {
         std::vector<BigInt> m_denominator;
 
       public:
-        explicit Value(std::string letters);
+        explicit Value(std::string_view letters);
     };
 } // namespace number

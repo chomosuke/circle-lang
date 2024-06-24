@@ -8,6 +8,7 @@ add_compile_options(
 	-Wall
 	-Wextra
 	-Wno-braced-scalar-init
+	-Wno-sign-compare
 )
 
 project(circle-lang LANGUAGES CXX)

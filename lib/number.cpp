@@ -1,4 +1,5 @@
 #include "number.hpp"
+#include <iterator>
 
 namespace number {
     bool is_in_char_set(char c) {
@@ -6,11 +7,82 @@ namespace number {
                c == '_';
     }
 
-    std::string lexicographically_minimal_rotation(std::string_view str) {
-        return std::string(str);
+    template <typename T, typename I> class RotateableIndex {
+      private:
+        const T& m_t;
+        int m_offset{};
+
+      public:
+        explicit RotateableIndex(const T& t) : m_t{t} {}
+
+        I& operator[](std::size_t i) { return m_t[(i + m_offset) % m_t.size()]; }
+        const I& operator[](std::size_t i) const { return m_t[(i + m_offset) % m_t.size()]; }
+
+        void rotate(int n) { m_offset += n; }
+
+        [[nodiscard]] int get_offset() const { return m_offset; }
+
+        [[nodiscard]] T::size_type size() const { return m_t.size(); }
+
+        bool operator==(const RotateableIndex& rhs) const {
+            return m_t == rhs.m_t && m_offset == rhs.m_offset;
+        }
+
+        class Iterator {
+          private:
+            std::reference_wrapper<const RotateableIndex> m_r;
+            int m_index{};
+
+          public:
+            explicit Iterator(const RotateableIndex& v, int index) : m_r{v}, m_index{index} {}
+
+            using value_type = I;        // NOLINT(readability-identifier-naming)
+            using difference_type = int; // NOLINT(readability-identifier-naming)
+
+            const I& operator*() const { return m_r.get()[m_index % m_r.get().size()]; }
+
+            Iterator& operator++() {
+                m_index++;
+                return *this;
+            }
+
+            Iterator operator++(int) {
+                auto tmp = *this;
+                m_index++;
+                return tmp;
+            }
+
+            bool operator==(const Iterator& rhs) const {
+                return m_r.get() == rhs.m_r.get() && m_index == rhs.m_index;
+            };
+        };
+        static_assert(std::input_iterator<Iterator>);
+
+        Iterator begin() { return Iterator(*this, 0); }
+        Iterator end() { return Iterator(*this, m_t.size()); }
+    };
+
+    RotateableIndex<std::string_view, char>
+    lexicographically_minimal_rotation(std::string_view str) {
+        RotateableIndex<std::string_view, char> strr{str};
+        if (str.size() == 0) {
+            return strr;
+        }
+
+        std::vector<int> f(str.size(), 0);
+        for (int i{0}; i < f.size(); i++) {
+        }
+
+        return strr;
     }
 
-    Value::Value(std::string letters) {
-        
+    Value::Value(std::string_view letters) : m_denominator{1} {
+        auto min_letters{lexicographically_minimal_rotation(letters)};
+
+        BigInt base{1};
+        for (auto l : min_letters) {
+            m_numerator.push_back(base * l);
+            base *= 256;
+        }
     }
 } // namespace number
