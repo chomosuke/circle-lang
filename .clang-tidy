@@ -10,6 +10,7 @@ Checks: >
   hicpp-*,
   llvm-*,
   -llvm-else-after-return,
+  -llvm-include-order,
   misc-*,
   modernize-*,
   -modernize-use-trailing-return-type,

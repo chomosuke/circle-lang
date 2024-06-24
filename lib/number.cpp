@@ -15,11 +15,11 @@ namespace number {
       public:
         explicit RotateableIndex(const T& t) : m_t{t} {}
 
-        I& operator[](std::size_t i) { return m_t[(i + m_offset) % m_t.size()]; }
         const I& operator[](std::size_t i) const { return m_t[(i + m_offset) % m_t.size()]; }
 
         void rotate(int n) { m_offset += n; }
 
+        void set_offset(int offset) { m_offset = offset; }
         [[nodiscard]] int get_offset() const { return m_offset; }
 
         [[nodiscard]] T::size_type size() const { return m_t.size(); }
@@ -69,8 +69,28 @@ namespace number {
             return strr;
         }
 
-        std::vector<int> f(str.size(), 0);
-        for (int i{0}; i < f.size(); i++) {
+        std::vector<int> f(str.size() * 2, 0);
+        for (int i{1}; i < f.size(); i++) {
+            int prev_len = f[i - 1];
+            while (true) {
+                if (strr[i] == strr[prev_len]) {
+                    f[i] = prev_len + 1;
+                    break;
+                } else if (strr[i] < strr[prev_len]) {
+                    strr.rotate(i - prev_len);
+                    if (prev_len > 0) {
+                        i = prev_len - 1;
+                    } else {
+                        i = 0;
+                    }
+                    break;
+                }
+                if (prev_len == 0) {
+                    f[i] = 0;
+                    break;
+                }
+                prev_len = f[prev_len - 1];
+            }
         }
 
         return strr;
