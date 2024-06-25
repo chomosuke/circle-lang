@@ -14,7 +14,7 @@ way:
     - Arrays are circular, and the indices are continuous.
     - Functions are circular, with a starting condition. If the starting
       condition is met, a new iteration is started.
-        - Functions are actually just syntactic sugar for circular array.
+        - Functions are actually just an array of instructions.
 - There are no local variable, because that implies call stack, which is not
   circular.
 - There are one global variable, which is a big global circular array.
@@ -29,19 +29,21 @@ way:
 - Anonymous function are written as s expressions, which are circular, so they
   are executed as loops, with the first element treated and the condition for
   the loop.
-- There are operators: + - * / && || = != < > <= >=
+- There are operators: + - * / % && || = != < > <= >=
 - Index out of bound just returns 1.
-- Commands:
-    - input
-        - Put the user input into `((input))`
-    - output
-        - Print the string in `((output))`
+- standard library functions:
+    - `((std_input))`
+        - Put one user input's ASCII value into `((std_input_char))`
+    - `((std_output))`
+        - Print ASCII value in `((std_output_char))` as a character
 
 Conceptually, a circle-lang program is just a nested array of expressions to
 evaluation, with the global circular array. Each array is circular and the first
 element of the list are treated as the condition. Array are written as s
 expressions. And the way to store variable is to index into the global circular
 array.
+
+The entire file is implicitly one global circular array.
 
 Problem:
 Two people can only eat an even amount of watermelon in liters.
@@ -50,10 +52,10 @@ satisfied.
 
 Example program:
 ```
-(
-    ((main))
+( # This program has not been updated with the newer design.
+    ((main));
     ((len)) := (
-        ((len_))
+        ((len_));
         ((len_)) := 0
         ((len_temp))((0)) := ((len_in))((0))
         ((len_in))((0)) := magic_number
@@ -62,14 +64,29 @@ Example program:
         (
             ((len_in))
         )
-    )
+    );
     ((atoi)) := (
         ((atoi_))
         ((atoi_i)) := 0
         ((atoi_str))((atoi_i))
-    )
+    );
     input
     ((atoi_str)) := ((input))
     ((atoi))
 )
+```
+
+```
+((unique_name)) := (
+    ((F)) = ((F)) + 1*1;
+
+    (( ((F)) ))((some_local_variable)) := something;
+    # and some other code
+
+    ((F)) = ((F)) - 1*1;
+);
+
+# 1 as the index for the second element because zero index
+(( ((F)) + 1*1 )) := (parameters);
+((unique_name)); # Calls the function
 ```

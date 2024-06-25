@@ -197,6 +197,9 @@ namespace partial {
             if (content == "/") {
                 return state_with_new_partial(c, token::Divide{});
             }
+            if (content == "%") {
+                return state_with_new_partial(c, token::Remainder{});
+            }
             if (content == "&&") {
                 return state_with_new_partial(c, token::BoolAnd{});
             }
@@ -226,7 +229,7 @@ namespace partial {
     }
 } // namespace partial
 
-tl::expected<std::vector<token::Token>, diagnostic::Diagnostic> lex(const std::string& src_code) {
+tl::expected<std::vector<token::Token>, diagnostic::Diagnostic> lex(std::string_view src_code) {
     std::vector<token::Token> tokens{};
     std::unique_ptr<partial::Token> partial{std::make_unique<partial::WhiteSpace>()};
     diagnostic::Range range{.start{.line{0}, .column{0}}, .end{.line{0}, .column{0}}};

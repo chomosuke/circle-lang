@@ -8,8 +8,9 @@
 
 namespace token {
     struct OpenBracket {};
-    struct OpenBracket2 {};
     struct CloseBracket {};
+    struct Semicolon {};
+    struct OpenBracket2 {};
     struct CloseBracket2 {};
     struct Comment {
         std::string content;
@@ -22,6 +23,7 @@ namespace token {
     struct Minus {};
     struct Multiply {};
     struct Divide {};
+    struct Remainder {};
     struct BoolAnd {};
     struct BoolOr {};
     struct Equal {};
@@ -31,9 +33,27 @@ namespace token {
     struct Greater {};
     struct GreaterOrEqual {};
 
-    using Kind = std::variant<OpenBracket, OpenBracket2, CloseBracket, CloseBracket2, Comment,
-                              Number, Assign, Plus, Minus, Multiply, Divide, BoolAnd, BoolOr, Equal,
-                              NotEqual, Smaller, SmallerOrEqual, Greater, GreaterOrEqual>;
+    using Kind = std::variant<OpenBracket,    //
+                              CloseBracket,   //
+                              Semicolon,      //
+                              OpenBracket2,   //
+                              CloseBracket2,  //
+                              Comment,        //
+                              Number,         //
+                              Assign,         //
+                              Plus,           //
+                              Minus,          //
+                              Multiply,       //
+                              Divide,         //
+                              Remainder,      //
+                              BoolAnd,        //
+                              BoolOr,         //
+                              Equal,          //
+                              NotEqual,       //
+                              Smaller,        //
+                              SmallerOrEqual, //
+                              Greater,        //
+                              GreaterOrEqual>;
 
     struct Token {
         diagnostic::Range range;
@@ -41,4 +61,4 @@ namespace token {
     };
 } // namespace token
 
-tl::expected<std::vector<token::Token>, diagnostic::Diagnostic> lex(const std::string& src_code);
+tl::expected<std::vector<token::Token>, diagnostic::Diagnostic> lex(std::string_view src_code);
