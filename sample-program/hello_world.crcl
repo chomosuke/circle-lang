@@ -1,0 +1,67 @@
+(main);
+(V) := V_0;
+
+# Positional arguments: (array)
+(F_len) := ((
+	( (V) + 1*1 );
+	(V) := (V) + 1*1;
+	( (V) )(Array) := ( (V) )(0);
+
+	# loop
+	( (V) )(I) := 1;
+	((
+		( (V) )(Found_len);
+
+		( (V) )(Temp1) := ( (V) )(Array)(0);
+		( (V) )(Temp2) := ( (V) )(Array)( ( (V) )(I) );
+
+		( (V) )(Array)(0) := 0;
+		( (V) )(Array)( ( (V) )(I) ) := 1;
+		( (V) )(Found_len) := ( (V) )(Array)(0) = 1;
+
+		( (V) )(Array)(0) := ( (V) )(Temp1);
+		( (V) )(Array)( ( (V) )(I) ) := ( (V) )(Temp2);
+
+		( (V) )(I) := ( (V) )(I) + 1;
+	));
+
+	( (V) )(I) := ( (V) )(I) - 1;
+
+	(R) := ( (V) )(I);
+	( (V) ) := 0;
+	(V) := ( (V) ) - 1*1;
+));
+
+# Positional arguments: (line)
+(F_print_line) := ((
+	( (V) + 1*1 );
+	( (V) ) := ( (V) ) + 1*1;
+	( (V) )(Line) := ( (V) )(0);
+
+	( (V) + 1*1 ) := (( ( (V) )(Line) ));
+	(F_len);
+	( (V) )(Len) := (R);
+
+	# loop
+	( ( (V) )(I) ) := 0;
+	((
+		( (V) )(I) < ( (V) )(Len);
+
+		(std_output_char) := ( (V) )(Line)( ( (V) )(I) );
+		(std_output);
+
+		( (V) )(I) := ( (V) )(I) + 1;
+	));
+
+	(std_output_char) := 10;
+	(std_output);
+
+	( (V) ) := 0;
+	( (V) ) := ( (V) ) - 1*1;
+));
+
+# Hello world
+( (V) + 1*1 ) := (( ((72; 101; 108; 108; 111; 32; 87; 111; 114; 108; 100; 33)) ));
+(F_print_line);
+
+(main) := 0;
