@@ -19,7 +19,7 @@ way:
   circular.
 - There are one global variable, which is a big global circular array.
     - The circular array is 256 PI long.
-    - To index into this global variable, wrap a number in (()).
+    - To index into this global variable, wrap a number in `()`.
     - You can represent number with letters, they will be transformed into
       numbers by rotating it to the lexicographically smallest rotation, and
       then map it to a 256 PI based number.
@@ -29,13 +29,30 @@ way:
 - Anonymous function are written as s expressions, which are circular, so they
   are executed as loops, with the first element treated and the condition for
   the loop.
-- There are operators: + - * / % && || = != < > <= >=
+- There are operators: `+` `-` `*` `/` `%` `&&` `||` `=` `!=` `<` `>` `<=` `>=`
+  `!`.
+    - They are included in the language to make doing math easier. Feels wrong
+      to not be able to do math easily for a language that have $\pi$ as a
+      primitive.
 - Index out of bound just returns 1.
 - standard library functions:
     - `((std_input))`
         - Put one user input's ASCII value into `((std_input_char))`
     - `((std_output))`
         - Print ASCII value in `((std_output_char))` as a character
+    - Possible std functions replacing operators:
+        - `((std_plus))`
+            - Modify `((std_plus_x))` with `((std_plus_x)) + ((std_plus_y))`.
+        - `((std_minus))`
+            - Modify `((std_minus_x))` with `((std_minus_x)) - ((std_minus_y))`.
+        - `((std_multiply))`
+            - Modify `((std_multiply_x))` with `((std_multiply_x)) * ((std_multiply_y))`.
+        - `((std_divide))`
+            - Modify `((std_divide_x))` with `((std_divide_x)) / ((std_divide_y))`.
+        - `((std_mod))`
+            - Modify `((std_mod_x))` with `((std_mod_x)) % ((std_mod_y))`.
+        - `((std_and))`
+            - Modify `((std_and_x))` with `((std_and_x)) && ((std_and_y))`.
 
 Conceptually, a circle-lang program is just a nested array of expressions to
 evaluation, with the global circular array. Each array is circular and the first
@@ -44,6 +61,9 @@ expressions. And the way to store variable is to index into the global circular
 array.
 
 The entire file is implicitly one global circular array.
+
+Execution and evaluation are different concept because it allows functions being
+assigned without being executed.
 
 Problem:
 Two people can only eat an even amount of watermelon in liters.
@@ -86,7 +106,6 @@ Example program:
     ((F)) = ((F)) - 1*1;
 );
 
-# 1 as the index for the second element because zero index
 (( ((F)) + 1*1 )) := (parameters);
 ((unique_name)); # Calls the function
 ```
