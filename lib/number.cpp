@@ -1,7 +1,7 @@
 #include "number.hpp"
 #include <climits>
-#include <sstream>
 #include <iterator>
+#include <sstream>
 
 namespace number {
     bool is_in_char_set(char c) {
@@ -108,6 +108,8 @@ namespace number {
         }
     }
 
+    Value::Value(const BigInt& number) : m_numerator{0, number}, m_denominator{1} {}
+
     const std::vector<BigInt>& Value::get_numerator() { return m_numerator; }
 
     const std::vector<BigInt>& Value::get_denominator() { return m_denominator; }
@@ -116,7 +118,7 @@ namespace number {
         std::stringstream ss{};
         BigInt base{1};
         for (const auto& n : m_numerator) {
-            if (n % base != 0 || n / base > CHAR_MAX) {
+            if (n % base != 0 || n / base > CHAR_MAX || n / base <= '\0') {
                 return std::nullopt;
             }
             ss << static_cast<char>((n / base).to_int());

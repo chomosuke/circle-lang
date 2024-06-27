@@ -31,12 +31,16 @@ namespace token {
 
                     std::stringstream ss{};
                     ss << "{";
+                    const auto* space = "";
                     for (const auto& n : t.value.get_numerator()) {
-                        ss << n << " ";
+                        ss << space << n;
+                        space = " ";
                     }
                     ss << "}{";
+                    space = "";
                     for (const auto& n : t.value.get_denominator()) {
-                        ss << n << " ";
+                        ss << space << n;
+                        space = " ";
                     }
                     ss << "}";
                     return ss.str();
@@ -132,7 +136,7 @@ namespace partial {
         std::stringstream m_content;
 
       public:
-        explicit Number(char c) : m_content{} { m_content << c; }
+        explicit Number(char c) { m_content << c; }
         ReadCharResult read_char(char c) override;
     };
 
@@ -250,7 +254,12 @@ namespace partial {
             m_content << c;
             return std::nullopt;
         } else {
-            return state_with_new_partial(c, token::Number{.value{m_content.str()}});
+            try {
+                return state_with_new_partial(c, token::Number{.value{BigInt(m_content.str())}});
+            } catch (std::invalid_argument&) {
+                return state_with_new_partial(
+                    c, token::Number{.value{std::string_view(m_content.str())}});
+            }
         }
     }
 

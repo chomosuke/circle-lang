@@ -16,6 +16,7 @@ namespace number {
 
       public:
         explicit Value(std::string_view letters);
+        explicit Value(const BigInt& number);
 
         const std::vector<BigInt>& get_numerator();
         const std::vector<BigInt>& get_denominator();
