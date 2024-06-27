@@ -1,7 +1,10 @@
 #include "number.hpp"
+#include "vendor/BigInt.hpp"
 #include <climits>
 #include <iterator>
 #include <sstream>
+#include <string_view>
+#include <vector>
 
 namespace number {
     bool is_in_char_set(char c) {

@@ -1,4 +1,5 @@
 #include "lexer.hpp"
+#include "diagnostic.hpp"
 #include "number.hpp"
 #include <array>
 #include <climits>
@@ -6,6 +7,7 @@
 #include <sstream>
 #include <string>
 #include <tl/expected.hpp>
+#include <variant>
 
 namespace token {
     std::string to_string(Token t) {
@@ -145,7 +147,7 @@ namespace partial {
         std::stringstream m_content;
 
       public:
-        explicit Operator(char c) : m_content{std::string{c}} {}
+        explicit Operator(char c) { m_content << c; }
         ReadCharResult read_char(char c) override;
     };
 
@@ -323,12 +325,6 @@ tl::expected<std::vector<token::Token>, diagnostic::Diagnostic> lex(std::string_
     std::unique_ptr<partial::Token> partial{std::make_unique<partial::WhiteSpace>()};
     diagnostic::Range range{.start{.line{0}, .column{0}}, .end{.line{0}, .column{0}}};
     for (const char& c : src_code) {
-        if (c == '\n') {
-            range.end.column = 0;
-            range.end.line++;
-        } else {
-            range.end.column++;
-        }
         auto maybe_next_state = partial->read_char(c);
         if (maybe_next_state) {
             auto next_state = std::move(*maybe_next_state);
@@ -340,8 +336,13 @@ tl::expected<std::vector<token::Token>, diagnostic::Diagnostic> lex(std::string_
                 range.start = range.end;
             }
         } else {
-            return tl::unexpected(
-                diagnostic::Diagnostic{.range{range}, .message{maybe_next_state.error()}});
+            return tl::unexpected(diagnostic::Diagnostic(range, maybe_next_state.error()));
+        }
+        if (c == '\n') {
+            range.end.column = 0;
+            range.end.line++;
+        } else {
+            range.end.column++;
         }
     }
     return tokens;
