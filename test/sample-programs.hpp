@@ -3,7 +3,7 @@
 namespace sample_programs {
     constexpr auto HELLO_WORLD = R"(
 (S);
-(V) := V_0;
+(V) := V_a;
 
 # ((array)) -> len
 (F_len) := ((
