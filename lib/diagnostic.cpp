@@ -13,7 +13,7 @@ namespace diagnostic {
         : m_range{range}, m_message{std::move(message)} {}
 
     std::string Diagnostic::to_string() {
-        return std::format("{}:{}-{}:{}: ", m_range.start.line, m_range.start.column,
+        return std::format("{}:{}-{}:{}: {}", m_range.start.line, m_range.start.column,
                            m_range.end.line, m_range.end.column, m_message);
     }
 } // namespace diagnostic
