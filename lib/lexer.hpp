@@ -59,6 +59,8 @@ namespace token {
         diagnostic::Range range;
         Kind kind;
     };
+
+    std::string to_string(Token t);
 } // namespace token
 
 tl::expected<std::vector<token::Token>, diagnostic::Diagnostic> lex(std::string_view src_code);

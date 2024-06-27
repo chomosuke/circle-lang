@@ -40,6 +40,12 @@ way:
 - There are operators: `+` `-` `*` `/` `%` `&&` `||` `=` `!=` `<` `>` `<=` `>=`
   `!`.
   - They do exactly what you'd expect.
+  - Precedence:
+    - `!`
+    - `*` `/` `%`
+    - `+` `-`
+    - `=` `!=` `<` `>` `<=` `>=`
+    - `&&` `||`
 - Execution and evaluation:
   - Evaluation have no side effect and will never mutate anything.
   - When assignment statement in the form of `<lvalue> := <rvalue>` are

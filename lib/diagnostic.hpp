@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 namespace diagnostic {
     // Zero indexed
@@ -15,7 +16,7 @@ namespace diagnostic {
     };
 
     struct Diagnostic {
-        Range range;
+        std::vector<Range> range;
         std::string message;
     };
 } // namespace diagnostic

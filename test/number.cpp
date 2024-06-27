@@ -44,3 +44,20 @@ TEST(Number, LexicographicallyMinimalRotationBF) {
         // std::cout << ss.str() << " " << i << std::endl;
     }
 }
+
+TEST(Number, ValueFromNumber) {}
+
+TEST(Number, ValueFromName) {
+    auto n = number::Value("abcd");
+    EXPECT_EQ(n.get_numerator(), (std::vector<BigInt>{'a' * pow(number::LETTER_BASE, 0),
+                                                      'b' * pow(number::LETTER_BASE, 1),
+                                                      'c' * pow(number::LETTER_BASE, 2),
+                                                      'd' * pow(number::LETTER_BASE, 3)}));
+    n = number::Value("bcda");
+    EXPECT_EQ(n.get_numerator(), (std::vector<BigInt>{'a' * pow(number::LETTER_BASE, 0),
+                                                      'b' * pow(number::LETTER_BASE, 1),
+                                                      'c' * pow(number::LETTER_BASE, 2),
+                                                      'd' * pow(number::LETTER_BASE, 3)}));
+
+    EXPECT_EQ(n.to_letters(), "abcd");
+}

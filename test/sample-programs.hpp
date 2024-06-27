@@ -1,3 +1,7 @@
+#pragma once
+
+namespace sample_programs {
+    constexpr auto HELLO_WORLD = R"(
 (S);
 (V) := V_0;
 
@@ -65,3 +69,5 @@
 (F_print_str);
 
 (S) := 0;
+)";
+} // namespace sample_programs

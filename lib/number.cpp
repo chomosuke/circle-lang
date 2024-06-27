@@ -1,4 +1,6 @@
 #include "number.hpp"
+#include <climits>
+#include <sstream>
 #include <iterator>
 
 namespace number {
@@ -9,7 +11,7 @@ namespace number {
 
     template <typename T, typename I> class RotateableIndex {
       private:
-        const T& m_t;
+        const T m_t;
         int m_offset{};
 
       public:
@@ -102,7 +104,24 @@ namespace number {
         BigInt base{1};
         for (auto l : min_letters) {
             m_numerator.push_back(base * l);
-            base *= 256;
+            base *= LETTER_BASE;
         }
+    }
+
+    const std::vector<BigInt>& Value::get_numerator() { return m_numerator; }
+
+    const std::vector<BigInt>& Value::get_denominator() { return m_denominator; }
+
+    std::optional<std::string> Value::to_letters() {
+        std::stringstream ss{};
+        BigInt base{1};
+        for (const auto& n : m_numerator) {
+            if (n % base != 0 || n / base > CHAR_MAX) {
+                return std::nullopt;
+            }
+            ss << static_cast<char>((n / base).to_int());
+            base *= number::LETTER_BASE;
+        }
+        return ss.str();
     }
 } // namespace number

@@ -7,6 +7,75 @@
 #include <string>
 #include <tl/expected.hpp>
 
+namespace token {
+    std::string to_string(Token t) {
+        return std::visit(
+            [&]<typename T>(T& t) -> std::string {
+                if constexpr (std::is_same_v<T, OpenBracket>) {
+                    return "(";
+                } else if constexpr (std::is_same_v<T, CloseBracket>) {
+                    return ")";
+                } else if constexpr (std::is_same_v<T, Semicolon>) {
+                    return ";";
+                } else if constexpr (std::is_same_v<T, OpenBracket2>) {
+                    return "((";
+                } else if constexpr (std::is_same_v<T, CloseBracket2>) {
+                    return "))";
+                } else if constexpr (std::is_same_v<T, Comment>) {
+                    return std::format("#{}", t.content);
+                } else if constexpr (std::is_same_v<T, Number>) {
+                    auto letters = t.value.to_letters();
+                    if (letters) {
+                        return *letters;
+                    }
+
+                    std::stringstream ss{};
+                    ss << "{";
+                    for (const auto& n : t.value.get_numerator()) {
+                        ss << n << " ";
+                    }
+                    ss << "}{";
+                    for (const auto& n : t.value.get_denominator()) {
+                        ss << n << " ";
+                    }
+                    ss << "}";
+                    return ss.str();
+                } else if constexpr (std::is_same_v<T, Assign>) {
+                    return ":=";
+                } else if constexpr (std::is_same_v<T, Plus>) {
+                    return "+";
+                } else if constexpr (std::is_same_v<T, Minus>) {
+                    return "-";
+                } else if constexpr (std::is_same_v<T, Multiply>) {
+                    return "*";
+                } else if constexpr (std::is_same_v<T, Divide>) {
+                    return "/";
+                } else if constexpr (std::is_same_v<T, Remainder>) {
+                    return "%";
+                } else if constexpr (std::is_same_v<T, BoolAnd>) {
+                    return "&&";
+                } else if constexpr (std::is_same_v<T, BoolOr>) {
+                    return "||";
+                } else if constexpr (std::is_same_v<T, Equal>) {
+                    return "=";
+                } else if constexpr (std::is_same_v<T, NotEqual>) {
+                    return "!=";
+                } else if constexpr (std::is_same_v<T, Smaller>) {
+                    return "<";
+                } else if constexpr (std::is_same_v<T, SmallerOrEqual>) {
+                    return "<=";
+                } else if constexpr (std::is_same_v<T, Greater>) {
+                    return ">";
+                } else if constexpr (std::is_same_v<T, GreaterOrEqual>) {
+                    return ">=";
+                } else {
+                    static_assert(false, "Not exhaustive");
+                }
+            },
+            t.kind);
+    }
+} // namespace token
+
 namespace partial {
     class Token;
 
@@ -45,6 +114,11 @@ namespace partial {
         ReadCharResult read_char(char c) override;
     };
 
+    class Semicolon : public Token {
+      public:
+        ReadCharResult read_char(char c) override;
+    };
+
     class Comment : public Token {
       private:
         std::stringstream m_content;
@@ -58,7 +132,7 @@ namespace partial {
         std::stringstream m_content;
 
       public:
-        explicit Number(char c) : m_content{std::string{c}} {}
+        explicit Number(char c) : m_content{} { m_content << c; }
         ReadCharResult read_char(char c) override;
     };
 
@@ -73,7 +147,7 @@ namespace partial {
 
     consteval std::array<bool, CHAR_MAX> operator_char_set() {
         std::array<bool, CHAR_MAX> lookup{};
-        std::string char_set{"+-*/&|=<>:"};
+        std::string char_set{"+-*/%&|=<>:"};
         for (auto c : char_set) {
             lookup[c] = true; // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
         }
@@ -92,6 +166,8 @@ namespace partial {
                 return std::make_unique<OpenBracket>();
             case ')':
                 return std::make_unique<CloseBracket>();
+            case ';':
+                return std::make_unique<Semicolon>();
             case '#':
                 return std::make_unique<Comment>();
             default:
@@ -153,6 +229,10 @@ namespace partial {
                     std::string(m_count, ')')));
             }
         }
+    }
+
+    ReadCharResult Semicolon::read_char(char c) {
+        return state_with_new_partial(c, token::Semicolon{});
     }
 
     ReadCharResult Comment::read_char(char c) {
