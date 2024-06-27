@@ -1,14 +1,88 @@
 #include "lib/lexer.cpp"
 #include "test/sample-programs.hpp"
 #include <gtest/gtest.h>
+#include <variant>
 
-std::string tokens_to_string(const std::vector<token::Token>& ts) {
-    std::stringstream ss{};
-    for (const auto& t : ts) {
-        ss << token::to_string(t) << " ";
+namespace token {
+    std::string token_to_string(Token t) {
+        return std::visit(
+            [&]<typename T>(T& t) -> std::string {
+                if constexpr (std::is_same_v<T, OpenBracket>) {
+                    return "(";
+                } else if constexpr (std::is_same_v<T, CloseBracket>) {
+                    return ")";
+                } else if constexpr (std::is_same_v<T, Semicolon>) {
+                    return ";";
+                } else if constexpr (std::is_same_v<T, OpenBracket2>) {
+                    return "((";
+                } else if constexpr (std::is_same_v<T, CloseBracket2>) {
+                    return "))";
+                } else if constexpr (std::is_same_v<T, Comment>) {
+                    return std::format("#{}", t.content);
+                } else if constexpr (std::is_same_v<T, Number>) {
+                    auto letters = t.value.to_letters();
+                    if (letters) {
+                        return *letters;
+                    }
+
+                    std::stringstream ss{};
+                    ss << "{";
+                    const auto* space = "";
+                    for (const auto& n : t.value.get_numerator()) {
+                        ss << space << n;
+                        space = " ";
+                    }
+                    ss << "}{";
+                    space = "";
+                    for (const auto& n : t.value.get_denominator()) {
+                        ss << space << n;
+                        space = " ";
+                    }
+                    ss << "}";
+                    return ss.str();
+                } else if constexpr (std::is_same_v<T, Assign>) {
+                    return ":=";
+                } else if constexpr (std::is_same_v<T, Plus>) {
+                    return "+";
+                } else if constexpr (std::is_same_v<T, Minus>) {
+                    return "-";
+                } else if constexpr (std::is_same_v<T, Multiply>) {
+                    return "*";
+                } else if constexpr (std::is_same_v<T, Divide>) {
+                    return "/";
+                } else if constexpr (std::is_same_v<T, Remainder>) {
+                    return "%";
+                } else if constexpr (std::is_same_v<T, BoolAnd>) {
+                    return "&&";
+                } else if constexpr (std::is_same_v<T, BoolOr>) {
+                    return "||";
+                } else if constexpr (std::is_same_v<T, Equal>) {
+                    return "=";
+                } else if constexpr (std::is_same_v<T, NotEqual>) {
+                    return "!=";
+                } else if constexpr (std::is_same_v<T, Smaller>) {
+                    return "<";
+                } else if constexpr (std::is_same_v<T, SmallerOrEqual>) {
+                    return "<=";
+                } else if constexpr (std::is_same_v<T, Greater>) {
+                    return ">";
+                } else if constexpr (std::is_same_v<T, GreaterOrEqual>) {
+                    return ">=";
+                } else {
+                    static_assert(false, "Not exhaustive");
+                }
+            },
+            t.kind);
     }
-    return ss.str();
-}
+
+    std::string tokens_to_string(const std::vector<Token>& ts) {
+        std::stringstream ss{};
+        for (const auto& t : ts) {
+            ss << token_to_string(t) << " ";
+        }
+        return ss.str();
+    }
+} // namespace token
 
 TEST(Lex, HelloWorld) {
     EXPECT_EQ(tokens_to_string(lex(R"()").value()), "");
