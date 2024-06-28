@@ -5,6 +5,22 @@
 #include <vector>
 
 namespace number {
+    enum Operator {
+        plus,
+        minus,
+        multiply,
+        divide,
+        remainder,
+        bool_and,
+        bool_or,
+        equal,
+        not_equal,
+        smaller,
+        smaller_or_equal,
+        greater,
+        greater_or_equal,
+    };
+
     bool is_in_char_set(char c);
 
     constexpr int LETTER_BASE{256};

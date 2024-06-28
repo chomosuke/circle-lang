@@ -20,20 +20,9 @@ namespace token {
         number::Value value;
     };
     struct Assign {};
-
-    struct Plus {};
-    struct Minus {};
-    struct Multiply {};
-    struct Divide {};
-    struct Remainder {};
-    struct BoolAnd {};
-    struct BoolOr {};
-    struct Equal {};
-    struct NotEqual {};
-    struct Smaller {};
-    struct SmallerOrEqual {};
-    struct Greater {};
-    struct GreaterOrEqual {};
+    struct Operator {
+        number::Operator kind;
+    };
 
     using Kind = std::variant<OpenBracket,    //
                               CloseBracket,   //
@@ -43,19 +32,7 @@ namespace token {
                               Comment,        //
                               Number,         //
                               Assign,         //
-                              Plus,           //
-                              Minus,          //
-                              Multiply,       //
-                              Divide,         //
-                              Remainder,      //
-                              BoolAnd,        //
-                              BoolOr,         //
-                              Equal,          //
-                              NotEqual,       //
-                              Smaller,        //
-                              SmallerOrEqual, //
-                              Greater,        //
-                              GreaterOrEqual>;
+                              Operator>;
 
     struct Token {
         diagnostic::Range range;

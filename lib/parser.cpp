@@ -1,9 +1,9 @@
 #include "parser.hpp"
-#include "lexer.hpp"
 #include "diagnostic.hpp"
-#include <string_view>
+#include "lexer.hpp"
 #include <tl/expected.hpp>
 
-tl::expected<std::vector<token::Token>, diagnostic::Diagnostic> parse(std::string_view src_code) {
-
+tl::expected<ast_node::Node<ast_node::Any>, diagnostic::Diagnostic>
+parse(std::span<token::Token> tokens) {
+	
 }

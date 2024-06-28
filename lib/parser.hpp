@@ -2,7 +2,6 @@
 
 #include "lexer.hpp"
 #include <memory>
-#include <string_view>
 #include <tl/expected.hpp>
 #include <variant>
 #include <vector>
@@ -32,6 +31,7 @@ namespace ast_node {
 
     using Operable = std::variant<Operator, Index>;
     struct Operator {
+        number::Operator kind;
         Node<Operable> lhs;
         Node<Operable> rhs;
     };
@@ -42,4 +42,5 @@ namespace ast_node {
     };
 } // namespace ast_node
 
-tl::expected<std::vector<token::Token>, diagnostic::Diagnostic> parse(std::string_view src_code);
+tl::expected<ast_node::Node<ast_node::Any>, diagnostic::Diagnostic>
+parse(std::span<token::Token> tokens);

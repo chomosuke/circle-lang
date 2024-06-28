@@ -204,43 +204,43 @@ namespace partial {
                 return state_with_new_partial(c, token::Assign{});
             }
             if (content == "+") {
-                return state_with_new_partial(c, token::Plus{});
+                return state_with_new_partial(c, token::Operator{.kind{number::plus}});
             }
             if (content == "-") {
-                return state_with_new_partial(c, token::Minus{});
+                return state_with_new_partial(c, token::Operator{.kind{number::minus}});
             }
             if (content == "*") {
-                return state_with_new_partial(c, token::Multiply{});
+                return state_with_new_partial(c, token::Operator{.kind{number::multiply}});
             }
             if (content == "/") {
-                return state_with_new_partial(c, token::Divide{});
+                return state_with_new_partial(c, token::Operator{.kind{number::divide}});
             }
             if (content == "%") {
-                return state_with_new_partial(c, token::Remainder{});
+                return state_with_new_partial(c, token::Operator{.kind{number::remainder}});
             }
             if (content == "&&") {
-                return state_with_new_partial(c, token::BoolAnd{});
+                return state_with_new_partial(c, token::Operator{.kind{number::bool_and}});
             }
             if (content == "||") {
-                return state_with_new_partial(c, token::BoolOr{});
+                return state_with_new_partial(c, token::Operator{.kind{number::bool_or}});
             }
             if (content == "=") {
-                return state_with_new_partial(c, token::Equal{});
+                return state_with_new_partial(c, token::Operator{.kind{number::equal}});
             }
             if (content == "!=") {
-                return state_with_new_partial(c, token::NotEqual{});
+                return state_with_new_partial(c, token::Operator{.kind{number::not_equal}});
             }
             if (content == "<") {
-                return state_with_new_partial(c, token::Smaller{});
+                return state_with_new_partial(c, token::Operator{.kind{number::smaller}});
             }
             if (content == "<=") {
-                return state_with_new_partial(c, token::SmallerOrEqual{});
+                return state_with_new_partial(c, token::Operator{.kind{number::smaller_or_equal}});
             }
             if (content == ">") {
-                return state_with_new_partial(c, token::Greater{});
+                return state_with_new_partial(c, token::Operator{.kind{number::greater}});
             }
             if (content == ">=") {
-                return state_with_new_partial(c, token::GreaterOrEqual{});
+                return state_with_new_partial(c, token::Operator{.kind{number::greater_or_equal}});
             }
             return tl::unexpected(std::format("\"{}\" is not a valid operator.", m_content.str()));
         }

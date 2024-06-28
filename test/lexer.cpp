@@ -42,32 +42,35 @@ namespace token {
                     return ss.str();
                 } else if constexpr (std::is_same_v<T, Assign>) {
                     return ":=";
-                } else if constexpr (std::is_same_v<T, Plus>) {
-                    return "+";
-                } else if constexpr (std::is_same_v<T, Minus>) {
-                    return "-";
-                } else if constexpr (std::is_same_v<T, Multiply>) {
-                    return "*";
-                } else if constexpr (std::is_same_v<T, Divide>) {
-                    return "/";
-                } else if constexpr (std::is_same_v<T, Remainder>) {
-                    return "%";
-                } else if constexpr (std::is_same_v<T, BoolAnd>) {
-                    return "&&";
-                } else if constexpr (std::is_same_v<T, BoolOr>) {
-                    return "||";
-                } else if constexpr (std::is_same_v<T, Equal>) {
-                    return "=";
-                } else if constexpr (std::is_same_v<T, NotEqual>) {
-                    return "!=";
-                } else if constexpr (std::is_same_v<T, Smaller>) {
-                    return "<";
-                } else if constexpr (std::is_same_v<T, SmallerOrEqual>) {
-                    return "<=";
-                } else if constexpr (std::is_same_v<T, Greater>) {
-                    return ">";
-                } else if constexpr (std::is_same_v<T, GreaterOrEqual>) {
-                    return ">=";
+                } else if constexpr (std::is_same_v<T, Operator>) {
+                    switch (t.kind) {
+                    case number::plus:
+                        return "+";
+                    case number::minus:
+                        return "-";
+                    case number::multiply:
+                        return "*";
+                    case number::divide:
+                        return "/";
+                    case number::remainder:
+                        return "%";
+                    case number::bool_and:
+                        return "&&";
+                    case number::bool_or:
+                        return "||";
+                    case number::equal:
+                        return "=";
+                    case number::not_equal:
+                        return "!=";
+                    case number::smaller:
+                        return "<";
+                    case number::smaller_or_equal:
+                        return "<=";
+                    case number::greater:
+                        return ">";
+                    case number::greater_or_equal:
+                        return ">=";
+                    }
                 } else {
                     static_assert(false, "Not exhaustive");
                 }
