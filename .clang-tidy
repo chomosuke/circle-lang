@@ -12,6 +12,7 @@ Checks: >
   -llvm-else-after-return,
   -llvm-include-order,
   misc-*,
+  -misc-non-private-member-variables-in-classes,
   modernize-*,
   -modernize-use-trailing-return-type,
   performance-*,

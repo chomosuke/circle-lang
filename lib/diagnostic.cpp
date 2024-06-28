@@ -3,12 +3,6 @@
 #include <string>
 
 namespace diagnostic {
-    bool operator==(const Position& a, const Position& b) {
-        return a.line == b.line && a.column == b.column;
-    }
-
-    bool operator==(const Range& a, const Range& b) { return a.start == b.start && a.end == b.end; }
-
     Diagnostic::Diagnostic(Range range, std::string message)
         : m_range{range}, m_message{std::move(message)} {}
 

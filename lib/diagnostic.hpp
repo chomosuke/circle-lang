@@ -7,14 +7,14 @@ namespace diagnostic {
     struct Position {
         int line;
         int column;
+        bool operator==(const Position& p) const = default;
     };
-    bool operator==(const Position& a, const Position& b);
 
     struct Range {
         Position start;
         Position end;
+        bool operator==(const Range& r) const = default;
     };
-    bool operator==(const Range& a, const Range& b);
 
     class Diagnostic {
       private:

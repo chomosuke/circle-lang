@@ -1,5 +1,6 @@
 #include "parser.hpp"
-#include "lib/lexer.hpp"
+#include "lexer.hpp"
+#include "diagnostic.hpp"
 #include <string_view>
 #include <tl/expected.hpp>
 

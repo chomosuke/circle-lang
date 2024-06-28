@@ -29,9 +29,7 @@ namespace number {
 
         [[nodiscard]] T::size_type size() const { return m_t.size(); }
 
-        bool operator==(const RotateableIndex& rhs) const {
-            return m_t == rhs.m_t && m_offset == rhs.m_offset;
-        }
+        bool operator==(const RotateableIndex& rhs) const = default;
 
         class Iterator {
           private:

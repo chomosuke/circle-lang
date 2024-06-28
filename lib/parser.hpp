@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lib/lexer.hpp"
+#include "lexer.hpp"
 #include <memory>
 #include <string_view>
 #include <tl/expected.hpp>
