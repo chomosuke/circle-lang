@@ -3,6 +3,7 @@
 #include "diagnostic.hpp"
 #include "number.hpp"
 #include <string>
+#include <string_view>
 #include <tl/expected.hpp>
 #include <variant>
 
@@ -19,6 +20,7 @@ namespace token {
         number::Value value;
     };
     struct Assign {};
+
     struct Plus {};
     struct Minus {};
     struct Multiply {};
