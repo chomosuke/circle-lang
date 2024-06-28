@@ -7,22 +7,21 @@ namespace diagnostic {
     struct Position {
         int line;
         int column;
+
         bool operator==(const Position& p) const = default;
     };
 
     struct Range {
         Position start;
         Position end;
+
         bool operator==(const Range& r) const = default;
     };
 
-    class Diagnostic {
-      private:
-        Range m_range;
-        std::string m_message;
+    struct Diagnostic {
+        Range range;
+        std::string message;
 
-      public:
-        Diagnostic(Range range, std::string message);
         std::string to_string();
     };
 

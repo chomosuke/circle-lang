@@ -94,7 +94,7 @@ TEST(Lex, HelloWorld) {
                   "( (V) )(Array) := ( (V) )(0);)\n")
                   .error()
                   .to_string(),
-              R"(1:14-1:16: "**" is not a valid operator.)");
+              R"(2:15-2:16: "**" is not a valid operator.)");
 
     auto hello_world = lex(sample_programs::HELLO_WORLD).value();
     EXPECT_EQ(

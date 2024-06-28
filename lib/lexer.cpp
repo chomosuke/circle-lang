@@ -263,7 +263,8 @@ tl::expected<std::vector<token::Token>, diagnostic::Diagnostic> lex(std::string_
                 range.start = range.end;
             }
         } else {
-            return tl::unexpected(diagnostic::Diagnostic(range, maybe_next_state.error()));
+            return tl::unexpected(
+                diagnostic::Diagnostic{.range{range}, .message{maybe_next_state.error()}});
         }
         if (c == '\n') {
             range.end.column = 0;
