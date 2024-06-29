@@ -40,8 +40,8 @@ namespace number {
         explicit Value(std::string_view letters);
         explicit Value(const BigInt& number);
 
-        const std::vector<BigInt>& get_numerator();
-        const std::vector<BigInt>& get_denominator();
-        std::optional<std::string> to_letters();
+        [[nodiscard]] const std::vector<BigInt>& get_numerator() const;
+        [[nodiscard]] const std::vector<BigInt>& get_denominator() const;
+        [[nodiscard]] std::optional<std::string> to_letters() const;
     };
 } // namespace number

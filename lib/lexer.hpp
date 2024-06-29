@@ -38,10 +38,7 @@ namespace token {
                               OperatorBinary, //
                               OperatorUnary>;
 
-    struct Token {
-        diagnostic::Range range;
-        Kind kind;
-    };
+    using Token = diagnostic::WithInfo<Kind>;
 } // namespace token
 
-tl::expected<std::vector<token::Token>, diagnostic::Diagnostic> lex(std::string_view src_code);
+diagnostic::Expected<std::vector<token::Token>> lex(std::string_view src_code);

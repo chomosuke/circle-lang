@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <tl/expected.hpp>
 
 namespace diagnostic {
     // Zero indexed
@@ -25,4 +26,10 @@ namespace diagnostic {
         std::string to_string();
     };
 
+    template <typename T> using Expected = tl::expected<T, Diagnostic>;
+
+    template <typename T> struct WithInfo {
+        Range range;
+        T t;
+    };
 } // namespace diagnostic

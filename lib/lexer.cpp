@@ -256,7 +256,7 @@ namespace partial {
     }
 } // namespace partial
 
-tl::expected<std::vector<token::Token>, diagnostic::Diagnostic> lex(std::string_view src_code) {
+diagnostic::Expected<std::vector<token::Token>> lex(std::string_view src_code) {
     std::vector<token::Token> tokens{};
     std::unique_ptr<partial::Token> partial{std::make_unique<partial::WhiteSpace>()};
     diagnostic::Range range{.start{.line{0}, .column{0}}, .end{.line{0}, .column{0}}};
@@ -267,7 +267,7 @@ tl::expected<std::vector<token::Token>, diagnostic::Diagnostic> lex(std::string_
             if (next_state) {
                 partial = std::move(next_state->first);
                 if (next_state->second) {
-                    tokens.push_back(token::Token{.range{range}, .kind{*next_state->second}});
+                    tokens.push_back(token::Token{.range{range}, .t{*next_state->second}});
                 }
                 range.start = range.end;
             }

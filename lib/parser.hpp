@@ -1,24 +1,29 @@
 #pragma once
 
 #include "lexer.hpp"
+#include "diagnostic.hpp"
 #include <memory>
 #include <tl/expected.hpp>
 #include <variant>
 #include <vector>
 
-namespace ast_node {
+namespace ast {
     struct Array;
     struct Assign;
+    struct Index;
     struct OperatorBinary;
     struct OperatorUnary;
-    struct Index;
+    struct Number;
 
-    using Any = std::variant<Array, Assign, OperatorBinary, OperatorUnary, Index>;
+    using Any = std::variant<Array, Assign, Index, OperatorBinary, OperatorUnary, Number>;
+    using Indexable = std::variant<Array, Index>;
+    using Operable = std::variant<Index, OperatorBinary, OperatorUnary, Number>;
 
-    template <typename T> class Node {
-      private:
-        diagnostic::Range m_range;
-        std::unique_ptr<T> m_t;
+    template <typename T> struct Node {
+        diagnostic::Range range;
+        std::unique_ptr<T> t;
+
+        template <typename U> Node<U> cast() { return Node{.range{range}, .t{t}}; }
     };
 
     struct Array {
@@ -30,7 +35,11 @@ namespace ast_node {
         Node<Any> rhs;
     };
 
-    using Operable = std::variant<OperatorBinary, OperatorUnary, Index>;
+    struct Index {
+        Node<Indexable> subject;
+        Node<Operable> index;
+    };
+
     struct OperatorBinary {
         number::op::Binary kind;
         Node<Operable> lhs;
@@ -42,11 +51,9 @@ namespace ast_node {
         Node<Operable> rhs;
     };
 
-    using Indexable = std::variant<std::monostate, Array, Index>;
-    struct Index {
-        Node<Indexable> subject;
+    struct Number {
+        number::Value value;
     };
-} // namespace ast_node
+} // namespace ast
 
-tl::expected<ast_node::Node<ast_node::Any>, diagnostic::Diagnostic>
-parse(std::span<token::Token> tokens);
+diagnostic::Expected<ast::Array> parse(std::span<token::Token> tokens);
