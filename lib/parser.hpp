@@ -9,10 +9,11 @@
 namespace ast_node {
     struct Array;
     struct Assign;
-    struct Operator;
+    struct OperatorBinary;
+    struct OperatorUnary;
     struct Index;
 
-    using Any = std::variant<Array, Assign, Operator, Index>;
+    using Any = std::variant<Array, Assign, OperatorBinary, OperatorUnary, Index>;
 
     template <typename T> class Node {
       private:
@@ -29,10 +30,15 @@ namespace ast_node {
         Node<Any> rhs;
     };
 
-    using Operable = std::variant<Operator, Index>;
-    struct Operator {
-        number::Operator kind;
+    using Operable = std::variant<OperatorBinary, OperatorUnary, Index>;
+    struct OperatorBinary {
+        number::op::Binary kind;
         Node<Operable> lhs;
+        Node<Operable> rhs;
+    };
+
+    struct OperatorUnary {
+        number::op::Unary kind;
         Node<Operable> rhs;
     };
 

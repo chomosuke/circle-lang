@@ -20,8 +20,11 @@ namespace token {
         number::Value value;
     };
     struct Assign {};
-    struct Operator {
-        number::Operator kind;
+    struct OperatorBinary {
+        number::op::Binary kind;
+    };
+    struct OperatorUnary {
+        number::op::Unary kind;
     };
 
     using Kind = std::variant<OpenBracket,    //
@@ -32,7 +35,8 @@ namespace token {
                               Comment,        //
                               Number,         //
                               Assign,         //
-                              Operator>;
+                              OperatorBinary, //
+                              OperatorUnary>;
 
     struct Token {
         diagnostic::Range range;

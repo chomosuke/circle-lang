@@ -203,44 +203,53 @@ namespace partial {
             if (content == ":=") {
                 return state_with_new_partial(c, token::Assign{});
             }
+            if (content == "!") {
+                return state_with_new_partial(c, token::OperatorUnary{.kind{number::op::bool_not}});
+            }
             if (content == "+") {
-                return state_with_new_partial(c, token::Operator{.kind{number::plus}});
+                return state_with_new_partial(c, token::OperatorBinary{.kind{number::op::plus}});
             }
             if (content == "-") {
-                return state_with_new_partial(c, token::Operator{.kind{number::minus}});
+                return state_with_new_partial(c, token::OperatorBinary{.kind{number::op::minus}});
             }
             if (content == "*") {
-                return state_with_new_partial(c, token::Operator{.kind{number::multiply}});
+                return state_with_new_partial(c,
+                                              token::OperatorBinary{.kind{number::op::multiply}});
             }
             if (content == "/") {
-                return state_with_new_partial(c, token::Operator{.kind{number::divide}});
+                return state_with_new_partial(c, token::OperatorBinary{.kind{number::op::divide}});
             }
             if (content == "%") {
-                return state_with_new_partial(c, token::Operator{.kind{number::remainder}});
+                return state_with_new_partial(c,
+                                              token::OperatorBinary{.kind{number::op::remainder}});
             }
             if (content == "&&") {
-                return state_with_new_partial(c, token::Operator{.kind{number::bool_and}});
+                return state_with_new_partial(c,
+                                              token::OperatorBinary{.kind{number::op::bool_and}});
             }
             if (content == "||") {
-                return state_with_new_partial(c, token::Operator{.kind{number::bool_or}});
+                return state_with_new_partial(c, token::OperatorBinary{.kind{number::op::bool_or}});
             }
             if (content == "=") {
-                return state_with_new_partial(c, token::Operator{.kind{number::equal}});
+                return state_with_new_partial(c, token::OperatorBinary{.kind{number::op::equal}});
             }
             if (content == "!=") {
-                return state_with_new_partial(c, token::Operator{.kind{number::not_equal}});
+                return state_with_new_partial(c,
+                                              token::OperatorBinary{.kind{number::op::not_equal}});
             }
             if (content == "<") {
-                return state_with_new_partial(c, token::Operator{.kind{number::smaller}});
+                return state_with_new_partial(c, token::OperatorBinary{.kind{number::op::smaller}});
             }
             if (content == "<=") {
-                return state_with_new_partial(c, token::Operator{.kind{number::smaller_or_equal}});
+                return state_with_new_partial(
+                    c, token::OperatorBinary{.kind{number::op::smaller_or_equal}});
             }
             if (content == ">") {
-                return state_with_new_partial(c, token::Operator{.kind{number::greater}});
+                return state_with_new_partial(c, token::OperatorBinary{.kind{number::op::greater}});
             }
             if (content == ">=") {
-                return state_with_new_partial(c, token::Operator{.kind{number::greater_or_equal}});
+                return state_with_new_partial(
+                    c, token::OperatorBinary{.kind{number::op::greater_or_equal}});
             }
             return tl::unexpected(std::format("\"{}\" is not a valid operator.", m_content.str()));
         }

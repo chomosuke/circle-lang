@@ -5,21 +5,27 @@
 #include <vector>
 
 namespace number {
-    enum Operator {
-        plus,
-        minus,
-        multiply,
-        divide,
-        remainder,
-        bool_and,
-        bool_or,
-        equal,
-        not_equal,
-        smaller,
-        smaller_or_equal,
-        greater,
-        greater_or_equal,
-    };
+    namespace op {
+        enum Binary {
+            plus,
+            minus,
+            multiply,
+            divide,
+            remainder,
+            bool_and,
+            bool_or,
+            equal,
+            not_equal,
+            smaller,
+            smaller_or_equal,
+            greater,
+            greater_or_equal,
+        };
+        enum Unary {
+            bool_not,
+        };
+
+    } // namespace op
 
     bool is_in_char_set(char c);
 

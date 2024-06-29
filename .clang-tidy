@@ -2,6 +2,7 @@ Checks: >
   -*,
   boost-*,
   bugprone-*,
+  -bugprone-easily-swappable-parameters,
   clang-analyzer-*,
   concurrency-*,
   cppcoreguidelines-*,

@@ -42,34 +42,39 @@ namespace token {
                     return ss.str();
                 } else if constexpr (std::is_same_v<T, Assign>) {
                     return ":=";
-                } else if constexpr (std::is_same_v<T, Operator>) {
+                } else if constexpr (std::is_same_v<T, OperatorBinary>) {
                     switch (t.kind) {
-                    case number::plus:
+                    case number::op::plus:
                         return "+";
-                    case number::minus:
+                    case number::op::minus:
                         return "-";
-                    case number::multiply:
+                    case number::op::multiply:
                         return "*";
-                    case number::divide:
+                    case number::op::divide:
                         return "/";
-                    case number::remainder:
+                    case number::op::remainder:
                         return "%";
-                    case number::bool_and:
+                    case number::op::bool_and:
                         return "&&";
-                    case number::bool_or:
+                    case number::op::bool_or:
                         return "||";
-                    case number::equal:
+                    case number::op::equal:
                         return "=";
-                    case number::not_equal:
+                    case number::op::not_equal:
                         return "!=";
-                    case number::smaller:
+                    case number::op::smaller:
                         return "<";
-                    case number::smaller_or_equal:
+                    case number::op::smaller_or_equal:
                         return "<=";
-                    case number::greater:
+                    case number::op::greater:
                         return ">";
-                    case number::greater_or_equal:
+                    case number::op::greater_or_equal:
                         return ">=";
+                    }
+                } else if constexpr (std::is_same_v<T, OperatorUnary>) {
+                    switch (t.kind) {
+                    case number::op::bool_not:
+                        return "!";
                     }
                 } else {
                     static_assert(false, "Not exhaustive");
