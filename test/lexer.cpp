@@ -6,7 +6,7 @@
 std::string tokens_to_string(const std::vector<token::Token>& ts) {
     std::stringstream ss{};
     for (const auto& t : ts) {
-        ss << token::to_string(t.t);
+        ss << to_string(t.t);
     }
     return ss.str();
 }

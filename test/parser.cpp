@@ -45,7 +45,8 @@ namespace de_double_bracket {
 TEST(Parse, DeDoubleBracket) {
     std::stringstream ss;
     auto tokens = lex(sample_programs::HELLO_WORLD).value();
-    de_double_bracket::print(ss, de_double_bracket::parse(tokens, true).value().first, 0);
+    std::vector<diagnostic::Range> ranges;
+    de_double_bracket::print(ss, de_double_bracket::parse(tokens, ranges).value().first, 0);
     EXPECT_EQ(ss.str(), R"(
 ( S )
 ( V ) := V_a
@@ -111,4 +112,25 @@ TEST(Parse, DeDoubleBracket) {
 ( F_print_str )
 ( S ) := {0 0}{1}
 )");
+
+    const char* const missing_2_close_b = "((\n"
+                                          "( (V) + 1*1 );\n"
+                                          "(V) := (V) + 1*1;\n"
+                                          "( (V) )(Array) := (( ( (V) )(0);\n"
+                                          "\n";
+    tokens = lex(missing_2_close_b).value();
+    ss.clear();
+    ranges.clear();
+    EXPECT_EQ(to_string(std::move(de_double_bracket::parse(tokens, ranges).error())),
+              "1:1-1:2: Can not find matching \"))\"\n"
+              "4:19-4:20: Can not find matching \"))\"\n");
+    const char* const missing_2_open_b = "( (V) + 1*1 );\n"
+                                         "(V) := (V) + 1*1 ));\n"
+                                         "( (V) )(Array) := ( (V) )(0) ));\n";
+    tokens = lex(missing_2_open_b).value();
+    ss.clear();
+    ranges.clear();
+    EXPECT_EQ(to_string(std::move(de_double_bracket::parse(tokens, ranges).error())),
+              "2:18-2:19: Can not find matching \"((\"\n"
+              "3:30-3:31: Can not find matching \"((\"\n");
 }

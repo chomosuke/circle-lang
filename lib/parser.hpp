@@ -56,4 +56,4 @@ namespace ast {
     };
 } // namespace ast
 
-diagnostic::Expected<ast::Array> parse(std::span<token::Token> tokens);
+diagnostic::ExpectedV<ast::Array> parse(std::span<token::Token> tokens);

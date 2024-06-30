@@ -9,6 +9,7 @@ namespace diagnostic {
         int line;
         int column;
 
+        int operator<=>(const Position& p) const;
         bool operator==(const Position& p) const = default;
     };
 
@@ -16,17 +17,19 @@ namespace diagnostic {
         Position start;
         Position end;
 
-        bool operator==(const Range& r) const = default;
+        int operator<=>(const Range& r) const = default;
     };
 
     struct Diagnostic {
         Range range;
         std::string message;
 
-        std::string to_string();
+        [[nodiscard]] std::string to_string() const;
     };
+    std::string to_string(std::vector<Diagnostic> ds);
 
     template <typename T> using Expected = tl::expected<T, Diagnostic>;
+    template <typename T> using ExpectedV = tl::expected<T, std::vector<Diagnostic>>;
 
     template <typename T> struct WithInfo {
         Range range;
