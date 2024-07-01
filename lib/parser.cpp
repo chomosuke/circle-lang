@@ -1,9 +1,8 @@
 #include "parser.hpp"
 #include "diagnostic.hpp"
 #include "lexer.hpp"
+#include "macros.hpp"
 #include <tl/expected.hpp>
-
-using namespace ast;
 
 namespace de_double_bracket {
     struct Node;
@@ -15,12 +14,17 @@ namespace de_double_bracket {
                                                           token::OperatorUnary,  //
                                                           Node>>;
     struct Node {
+        NON_COPIABLE(Node)
+
         std::vector<std::vector<Debracketed>> elements;
+        explicit Node(std::vector<std::vector<Debracketed>>&& elements)
+            : elements(std::move(elements)) {}
     };
 
     diagnostic::ExpectedV<std::pair<Node, int>>
     parse(std::span<token::Token> tokens, std::vector<diagnostic::Range>& open_b_ranges) {
-        std::vector<std::vector<Debracketed>> elements{{}};
+        std::vector<std::vector<Debracketed>> elements{};
+        elements.emplace_back();
         for (int i{0}; i < tokens.size(); i++) {
             auto r = std::visit(
                 [&]<typename T>(
@@ -31,13 +35,13 @@ namespace de_double_bracket {
                         if (!node_i) {
                             return tl::unexpected(node_i.error());
                         } else {
-                            auto node = node_i.value().first;
-                            auto new_i = node_i.value().second;
+                            auto node = std::move(node_i.value().first);
+                            auto new_i = i + node_i.value().second + 1;
                             elements.back().push_back(
                                 {.range{diagnostic::Range{.start{tokens[i].range.start},
                                                           .end{tokens[new_i].range.end}}},
-                                 .t{node}});
-                            i += new_i + 1;
+                                 .t{std::move(node)}});
+                            i = new_i;
                         }
                     } else if constexpr (std::is_same_v<T, token::CloseBracket2>) {
                         if (open_b_ranges.empty()) {
@@ -57,7 +61,7 @@ namespace de_double_bracket {
                             return tl::unexpected(ds);
                         } else {
                             open_b_ranges.pop_back();
-                            return std::make_pair(Node{.elements{std::move(elements)}}, i);
+                            return std::make_pair(Node{std::move(elements)}, i);
                         }
                     } else if constexpr (std::is_same_v<T, token::Semicolon>) {
                         elements.emplace_back();
@@ -83,7 +87,7 @@ namespace de_double_bracket {
                         elements.pop_back();
                     }
                 }
-                return *r;
+                return std::move(*r);
             }
         }
         if (!open_b_ranges.empty()) {
@@ -98,17 +102,23 @@ namespace de_double_bracket {
             if (elements.back().empty()) {
                 elements.pop_back();
             }
-            return std::make_pair(Node{.elements{elements}}, tokens.size());
+            return std::make_pair(Node{std::move(elements)}, tokens.size());
         }
     }
 } // namespace de_double_bracket
 
-diagnostic::ExpectedV<Array> parse(std::span<token::Token> tokens) {
+namespace to_ast {
+    diagnostic::ExpectedV<ast::Node<ast::Array>>
+    parse_array(const diagnostic::WithInfo<de_double_bracket::Node>& node) {}
+} // namespace to_ast
+
+diagnostic::ExpectedV<ast::Array> parse(std::span<token::Token> tokens) {
     std::vector<diagnostic::Range> open_b_ranges{};
     auto d_nodes_i = de_double_bracket::parse(tokens, open_b_ranges);
     if (!d_nodes_i) {
         return tl::unexpected(d_nodes_i.error());
     }
-    auto d_nodes = d_nodes_i.value().first;
-    return Array{};
+    auto d_nodes = std::move(d_nodes_i.value().first);
+    return to_ast::parse_array({.range{}, .t{std::move(d_nodes)}})
+        .map([](ast::Node<ast::Array> a) -> ast::Array { return std::move(*a.t.release()); });
 }

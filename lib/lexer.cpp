@@ -1,5 +1,6 @@
 #include "lexer.hpp"
 #include "diagnostic.hpp"
+#include "macros.hpp"
 #include "number.hpp"
 #include <array>
 #include <climits>
@@ -57,6 +58,9 @@ namespace partial {
         std::stringstream m_content;
 
       public:
+        NON_COPIABLE(Comment);
+
+        Comment() = default;
         ReadCharResult read_char(char c) override;
     };
 
@@ -65,6 +69,8 @@ namespace partial {
         std::stringstream m_content;
 
       public:
+        NON_COPIABLE(Number);
+
         explicit Number(char c) { m_content << c; }
         ReadCharResult read_char(char c) override;
     };
@@ -74,6 +80,8 @@ namespace partial {
         std::stringstream m_content;
 
       public:
+        NON_COPIABLE(Operator);
+
         explicit Operator(char c) { m_content << c; }
         ReadCharResult read_char(char c) override;
     };

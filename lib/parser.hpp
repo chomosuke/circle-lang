@@ -1,7 +1,8 @@
 #pragma once
 
-#include "lexer.hpp"
 #include "diagnostic.hpp"
+#include "lexer.hpp"
+#include "macros.hpp"
 #include <memory>
 #include <tl/expected.hpp>
 #include <variant>
@@ -19,12 +20,7 @@ namespace ast {
     using Indexable = std::variant<Array, Index>;
     using Operable = std::variant<Index, OperatorBinary, OperatorUnary, Number>;
 
-    template <typename T> struct Node {
-        diagnostic::Range range;
-        std::unique_ptr<T> t;
-
-        template <typename U> Node<U> cast() { return Node{.range{range}, .t{t}}; }
-    };
+    template <typename T> using Node = diagnostic::WithInfo<std::unique_ptr<T>>;
 
     struct Array {
         std::vector<Node<Any>> elements;
