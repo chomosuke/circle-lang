@@ -125,6 +125,6 @@ namespace number {
             ss << static_cast<char>((n / base).to_int());
             base *= number::LETTER_BASE;
         }
-        return ss.str();
+        return std::make_optional(ss.str());
     }
 } // namespace number

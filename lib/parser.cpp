@@ -33,7 +33,7 @@ namespace de_double_bracket {
                         open_b_ranges.push_back(tokens[i].range);
                         auto node_i = parse(tokens.subspan(i + 1), open_b_ranges);
                         if (!node_i) {
-                            return tl::unexpected(node_i.error());
+                            return std::make_optional(tl::unexpected(node_i.error()));
                         } else {
                             auto node = std::move(node_i.value().first);
                             auto new_i = i + node_i.value().second + 1;
@@ -58,10 +58,10 @@ namespace de_double_bracket {
                                     },
                                     tokens[i].t);
                             }
-                            return tl::unexpected(ds);
+                            return std::make_optional(tl::unexpected(ds));
                         } else {
                             open_b_ranges.pop_back();
-                            return std::make_pair(Node{std::move(elements)}, i);
+                            return std::make_optional(std::make_pair(Node{std::move(elements)}, i));
                         }
                     } else if constexpr (std::is_same_v<T, token::Semicolon>) {
                         elements.emplace_back();

@@ -125,12 +125,12 @@ namespace partial {
 
     inline ReadCharResult state_with_new_partial(char c, std::optional<token::Kind>&& token) {
         return new_partial(c).map(
-            [token](std::unique_ptr<Token> p) { return std::make_pair(std::move(p), token); });
+            [token](std::unique_ptr<Token> p) { return std::make_optional(std::make_pair(std::move(p), token)); });
     }
 
     ReadCharResult WhiteSpace::read_char(char c) {
         if (std::isspace(c) != 0) {
-            return std::optional<NextState>(std::nullopt);
+            return std::nullopt;
         } else {
             return state_with_new_partial(c, std::nullopt);
         }
@@ -178,8 +178,8 @@ namespace partial {
 
     ReadCharResult Comment::read_char(char c) {
         if (c == '\n') {
-            return std::make_pair(std::make_unique<WhiteSpace>(),
-                                  token::Comment{.content{m_content.str()}});
+            return std::make_optional(std::make_pair(std::make_unique<WhiteSpace>(),
+                                  token::Comment{.content{m_content.str()}}));
         } else {
             m_content << c;
             return std::nullopt;
