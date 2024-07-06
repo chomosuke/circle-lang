@@ -22,7 +22,7 @@ namespace token {
         explicit Comment(std::string&& content);
     };
     struct Number {
-        NON_COPIABLE(Number)
+        // NON_COPIABLE(Number)
 
         number::Value value;
 

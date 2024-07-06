@@ -124,8 +124,9 @@ namespace partial {
     }
 
     inline ReadCharResult state_with_new_partial(char c, std::optional<token::Kind>&& token) {
-        return new_partial(c).map(
-            [token](std::unique_ptr<Token> p) { return std::make_optional(std::make_pair(std::move(p), token)); });
+        return new_partial(c).map([token{std::move(token)}](std::unique_ptr<Token> p) mutable {
+            return std::make_optional(std::make_pair(std::move(p), std::move(token)));
+        });
     }
 
     ReadCharResult WhiteSpace::read_char(char c) {
@@ -178,8 +179,8 @@ namespace partial {
 
     ReadCharResult Comment::read_char(char c) {
         if (c == '\n') {
-            return std::make_optional(std::make_pair(std::make_unique<WhiteSpace>(),
-                                  token::Comment{.content{m_content.str()}}));
+            return std::make_optional(
+                std::make_pair(std::make_unique<WhiteSpace>(), token::Comment(m_content.str())));
         } else {
             m_content << c;
             return std::nullopt;
@@ -192,10 +193,11 @@ namespace partial {
             return std::nullopt;
         } else {
             try {
-                return state_with_new_partial(c, token::Number{.value{BigInt(m_content.str())}});
+                return state_with_new_partial(
+                    c, token::Number(number::Value(BigInt(m_content.str()))));
             } catch (std::invalid_argument&) {
                 return state_with_new_partial(
-                    c, token::Number{.value{std::string_view(m_content.str())}});
+                    c, token::Number(number::Value(std::string_view(m_content.str()))));
             }
         }
     }
@@ -265,10 +267,10 @@ namespace partial {
 } // namespace partial
 
 namespace token {
-    Comment::Comment(std::string&& content) : content{content} { }
+    Comment::Comment(std::string&& content) : content{content} {}
 
-    Number::Number(number::Value&& value) : value{value}{}
-}
+    Number::Number(number::Value&& value) : value{value} {}
+} // namespace token
 
 diagnostic::Expected<std::vector<token::Token>> lex(std::string_view src_code) {
     std::vector<token::Token> tokens{};
@@ -281,7 +283,7 @@ diagnostic::Expected<std::vector<token::Token>> lex(std::string_view src_code) {
             if (next_state) {
                 partial = std::move(next_state->first);
                 if (next_state->second) {
-                    tokens.push_back(token::Token{.range{range}, .t{*next_state->second}});
+                    tokens.push_back(token::Token{.range{range}, .t{std::move(*next_state->second)}});
                 }
                 range.start = range.end;
             }

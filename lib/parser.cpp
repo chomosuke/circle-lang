@@ -29,7 +29,8 @@ namespace de_double_bracket {
         for (int i{0}; i < tokens.size(); i++) {
             auto r = std::visit(
                 [&]<typename T>(
-                    const T& t) -> std::optional<diagnostic::ExpectedV<std::pair<Node, int>>> {
+                    T&& t) -> std::optional<diagnostic::ExpectedV<std::pair<Node, int>>> {
+                    static_assert(std::is_same_v<T, std::decay_t<T>>);
                     if constexpr (std::is_same_v<T, token::OpenBracket2>) {
                         open_b_ranges.push_back(tokens[i].range);
                         auto node_i = parse(tokens.subspan(i + 1), open_b_ranges);
@@ -74,13 +75,13 @@ namespace de_double_bracket {
                                          std::is_same_v<T, token::Assign> ||
                                          std::is_same_v<T, token::OperatorBinary> ||
                                          std::is_same_v<T, token::OperatorUnary>) {
-                        elements.back().push_back({.range{tokens[i].range}, .t{t}});
+                        elements.back().push_back(Debracketed{.range{tokens[i].range}, .t{std::forward<T>(t)}});
                     } else {
                         static_assert(false, "Not exhaustive");
                     }
                     return std::nullopt;
                 },
-                tokens[i].t);
+                std::move(tokens[i].t));
             if (r) {
                 if (*r) {
                     auto& elements = (*r)->first.elements;
@@ -117,7 +118,7 @@ namespace de_single_bracket {
         token::OperatorUnary,                              //
         Node>>;
     struct Node {
-        // NON_COPIABLE(Node)
+        NON_COPIABLE(Node)
 
         std::vector<Debracketed> childrens;
         explicit Node(std::vector<Debracketed>&& childrens) : childrens(std::move(childrens)) {}
@@ -125,17 +126,18 @@ namespace de_single_bracket {
 
     diagnostic::ExpectedV<std::vector<Debracketed>>
     parse(const std::vector<de_double_bracket::Debracketed>& tokens) {
-        auto debracketed = std::vector<std::vector<Debracketed>>{{}};
+        auto debracketed = std::vector<std::vector<Debracketed>>{};
+        debracketed.emplace_back();
 
         for (const auto& token : tokens) {
             std::visit(
                 [&]<typename T>(const T& t) {
-                    
+
                 },
                 token.t);
         }
 
-        return debracketed[0];
+        return std::move(debracketed[0]);
     }
 } // namespace de_single_bracket
 
