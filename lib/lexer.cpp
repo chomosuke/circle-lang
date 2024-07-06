@@ -58,7 +58,7 @@ namespace partial {
         std::stringstream m_content;
 
       public:
-        NON_COPIABLE(Comment);
+        NON_COPIABLE(Comment)
 
         Comment() = default;
         ReadCharResult read_char(char c) override;
@@ -69,7 +69,7 @@ namespace partial {
         std::stringstream m_content;
 
       public:
-        NON_COPIABLE(Number);
+        NON_COPIABLE(Number)
 
         explicit Number(char c) { m_content << c; }
         ReadCharResult read_char(char c) override;
@@ -263,6 +263,12 @@ namespace partial {
         }
     }
 } // namespace partial
+
+namespace token {
+    Comment::Comment(std::string&& content) : content{content} { }
+
+    Number::Number(number::Value&& value) : value{value}{}
+}
 
 diagnostic::Expected<std::vector<token::Token>> lex(std::string_view src_code) {
     std::vector<token::Token> tokens{};

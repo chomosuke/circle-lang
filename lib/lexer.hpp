@@ -1,6 +1,7 @@
 #pragma once
 
 #include "diagnostic.hpp"
+#include "macros.hpp"
 #include "number.hpp"
 #include <string>
 #include <string_view>
@@ -14,10 +15,18 @@ namespace token {
     struct OpenBracket2 {};
     struct CloseBracket2 {};
     struct Comment {
+        NON_COPIABLE(Comment)
+
         std::string content;
+
+        explicit Comment(std::string&& content);
     };
     struct Number {
+        NON_COPIABLE(Number)
+
         number::Value value;
+
+        explicit Number(number::Value&& value);
     };
     struct Assign {};
     struct OperatorBinary {

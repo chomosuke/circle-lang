@@ -17,8 +17,6 @@ namespace ast {
     struct Number;
 
     using Any = std::variant<Array, Assign, Index, OperatorBinary, OperatorUnary, Number>;
-    using Indexable = std::variant<Array, Index>;
-    using Operable = std::variant<Index, OperatorBinary, OperatorUnary, Number>;
 
     template <typename T> using Node = diagnostic::WithInfo<std::unique_ptr<T>>;
 
@@ -27,24 +25,32 @@ namespace ast {
     };
 
     struct Assign {
+        NON_COPIABLE(Assign)
+
         Node<Index> lhs;
         Node<Any> rhs;
     };
 
     struct Index {
-        Node<Indexable> subject;
-        Node<Operable> index;
+        NON_COPIABLE(Index)
+
+        Node<Any> subject;
+        Node<Any> index;
     };
 
     struct OperatorBinary {
+        NON_COPIABLE(OperatorBinary)
+
         number::op::Binary kind;
-        Node<Operable> lhs;
-        Node<Operable> rhs;
+        Node<Any> lhs;
+        Node<Any> rhs;
     };
 
     struct OperatorUnary {
+        NON_COPIABLE(OperatorUnary)
+
         number::op::Unary kind;
-        Node<Operable> rhs;
+        Node<Any> rhs;
     };
 
     struct Number {

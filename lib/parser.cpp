@@ -108,10 +108,55 @@ namespace de_double_bracket {
     }
 } // namespace de_double_bracket
 
-namespace to_ast {
-    diagnostic::ExpectedV<ast::Node<ast::Array>>
-    parse_array(const diagnostic::WithInfo<de_double_bracket::Node>& node) {}
-} // namespace to_ast
+namespace de_single_bracket {
+    struct Node;
+    using Debracketed = diagnostic::WithInfo<std::variant< //
+        token::Number,                                     //
+        token::Assign,                                     //
+        token::OperatorBinary,                             //
+        token::OperatorUnary,                              //
+        Node>>;
+    struct Node {
+        // NON_COPIABLE(Node)
+
+        std::vector<Debracketed> childrens;
+        explicit Node(std::vector<Debracketed>&& childrens) : childrens(std::move(childrens)) {}
+    };
+
+    diagnostic::ExpectedV<std::vector<Debracketed>>
+    parse(const std::vector<de_double_bracket::Debracketed>& tokens) {
+        auto debracketed = std::vector<std::vector<Debracketed>>{{}};
+
+        for (const auto& token : tokens) {
+            std::visit(
+                [&]<typename T>(const T& t) {
+                    
+                },
+                token.t);
+        }
+
+        return debracketed[0];
+    }
+} // namespace de_single_bracket
+
+// namespace to_ast {
+//     diagnostic::ExpectedV<ast::Node<ast::Any>>
+//     parse_element(const std::vector<de_double_bracket::Debracketed> tokens) {}
+//
+//     diagnostic::ExpectedV<ast::Node<ast::Array>>
+//     parse_array(const diagnostic::WithInfo<de_double_bracket::Node>& node) {
+//         ast::Array
+//         std::vector<diagnostic::Diagnostic> ds{};
+//         for (const auto& element : node.t.elements) {
+//             auto e = parse_element(element);
+//             if (e) {
+//
+//             } else {
+//
+//             }
+//         }
+//     }
+// } // namespace to_ast
 
 diagnostic::ExpectedV<ast::Array> parse(std::span<token::Token> tokens) {
     std::vector<diagnostic::Range> open_b_ranges{};
@@ -120,6 +165,19 @@ diagnostic::ExpectedV<ast::Array> parse(std::span<token::Token> tokens) {
         return tl::unexpected(d_nodes_i.error());
     }
     auto d_nodes = std::move(d_nodes_i.value().first);
-    return to_ast::parse_array({.range{}, .t{std::move(d_nodes)}})
-        .map([](ast::Node<ast::Array> a) -> ast::Array { return std::move(*a.t.release()); });
+    auto range = diagnostic::Range{};
+    for (const auto& e : d_nodes.elements) {
+        for (const auto& t : e) {
+            range.start = t.range.start;
+        }
+    }
+    for (const auto& e : d_nodes.elements) {
+        for (const auto& t : e) {
+            range.start = t.range.start;
+        }
+    }
+
+    return ast::Array{};
+    // return to_ast::parse_array({.range{}, .t{std::move(d_nodes)}})
+    //     .map([](ast::Node<ast::Array> a) -> ast::Array { return std::move(*a.t.release()); });
 }
