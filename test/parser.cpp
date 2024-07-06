@@ -46,7 +46,8 @@ TEST(Parse, DeDoubleBracket) {
     std::stringstream ss;
     auto tokens = lex(sample_programs::HELLO_WORLD).value();
     std::vector<diagnostic::Range> ranges;
-    de_double_bracket::print(ss, de_double_bracket::parse(tokens, ranges).value().first, 0);
+    auto debracketed = de_double_bracket::parse(tokens, ranges).value().first;
+    de_double_bracket::print(ss, debracketed, 0);
     EXPECT_EQ(ss.str(), R"(
 ( S )
 ( V ) := V_a
@@ -112,6 +113,10 @@ TEST(Parse, DeDoubleBracket) {
 ( F_print_str )
 ( S ) := {0 0}{1}
 )");
+    auto range_2nd_inner_array =
+        std::get<de_double_bracket::Node>(debracketed.elements[3][4].t).elements[7][0].range;
+    EXPECT_EQ(range_2nd_inner_array.to_string(),
+              "47:2-54:3");
 
     const char* const missing_2_close_b = "((\n"
                                           "( (V) + 1*1 );\n"

@@ -13,8 +13,12 @@ namespace diagnostic {
     }
 
     std::string Diagnostic::to_string() const {
-        return std::format("{}:{}-{}:{}: {}", range.start.line + 1, range.start.column + 1,
-                           range.end.line + 1, range.end.column, message);
+        return std::format("{}: {}", range.to_string(), message);
+    }
+
+    std::string Range::to_string() const {
+        return std::format("{}:{}-{}:{}", start.line + 1, start.column + 1, end.line + 1,
+                           end.column);
     }
 
     std::string to_string(std::vector<Diagnostic> ds) {

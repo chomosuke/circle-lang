@@ -6,13 +6,14 @@
 
 namespace de_double_bracket {
     struct Node;
-    using Debracketed = diagnostic::WithInfo<std::variant<token::OpenBracket,    //
-                                                          token::CloseBracket,   //
-                                                          token::Number,         //
-                                                          token::Assign,         //
-                                                          token::OperatorBinary, //
-                                                          token::OperatorUnary,  //
-                                                          Node>>;
+    using Debracketed = diagnostic::WithInfo<std::variant< //
+        token::OpenBracket,                                //
+        token::CloseBracket,                               //
+        token::Number,                                     //
+        token::Assign,                                     //
+        token::OperatorBinary,                             //
+        token::OperatorUnary,                              //
+        Node>>;
     struct Node {
         NON_COPIABLE(Node)
 

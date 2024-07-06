@@ -42,6 +42,6 @@ TEST(Lex, HelloWorld) {
         "(( (( {0 72}{1}; {0 101}{1}; {0 108}{1}; {0 108}{1}; {0 111}{1}; {0 32}{1}; {0 87}{1}; {0 "
         "111}{1}; {0 114}{1}; {0 108}{1}; {0 100}{1}; {0 33}{1}; {0 10}{1} )) )); ( F_print_str ); "
         "( S ) := {0 0}{1}; ");
-    EXPECT_EQ(hello_world[hello_world.size() - 9].range,
-              (diagnostic::Range{.start{{65}, {1}}, .end{{65}, {12}}}));
+    EXPECT_EQ(hello_world[hello_world.size() - 9].range.to_string(),
+              "65:2-65:12");
 }

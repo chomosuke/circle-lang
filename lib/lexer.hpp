@@ -27,16 +27,17 @@ namespace token {
         number::op::Unary kind;
     };
 
-    using Kind = std::variant<OpenBracket,    //
-                              CloseBracket,   //
-                              Semicolon,      //
-                              OpenBracket2,   //
-                              CloseBracket2,  //
-                              Comment,        //
-                              Number,         //
-                              Assign,         //
-                              OperatorBinary, //
-                              OperatorUnary>;
+    using Kind = std::variant< //
+        OpenBracket,           //
+        CloseBracket,          //
+        Semicolon,             //
+        OpenBracket2,          //
+        CloseBracket2,         //
+        Comment,               //
+        Number,                //
+        Assign,                //
+        OperatorBinary,        //
+        OperatorUnary>;
 
     using Token = diagnostic::WithInfo<Kind>;
 } // namespace token

@@ -1,8 +1,7 @@
 #pragma once
 
 namespace sample_programs {
-    constexpr auto HELLO_WORLD = R"(
-(S);
+    constexpr auto HELLO_WORLD = R"((S);
 (V) := V_a;
 
 # ((array)) -> len

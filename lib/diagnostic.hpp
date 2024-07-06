@@ -18,6 +18,8 @@ namespace diagnostic {
         Position end;
 
         int operator<=>(const Range& r) const = default;
+
+        [[nodiscard]] std::string to_string() const;
     };
 
     struct Diagnostic {
