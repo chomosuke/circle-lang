@@ -38,7 +38,7 @@ namespace number {
         std::vector<BigInt> m_denominator;
 
       public:
-        // NON_COPIABLE(Value)
+        NON_COPIABLE(Value)
 
         explicit Value(std::string_view letters);
         explicit Value(const BigInt& number);

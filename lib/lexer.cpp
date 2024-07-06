@@ -269,7 +269,7 @@ namespace partial {
 namespace token {
     Comment::Comment(std::string&& content) : content{content} {}
 
-    Number::Number(number::Value&& value) : value{value} {}
+    Number::Number(number::Value&& value) : value{std::move(value)} {}
 } // namespace token
 
 diagnostic::Expected<std::vector<token::Token>> lex(std::string_view src_code) {

@@ -75,7 +75,8 @@ namespace de_double_bracket {
                                          std::is_same_v<T, token::Assign> ||
                                          std::is_same_v<T, token::OperatorBinary> ||
                                          std::is_same_v<T, token::OperatorUnary>) {
-                        elements.back().push_back(Debracketed{.range{tokens[i].range}, .t{std::forward<T>(t)}});
+                        elements.back().push_back(
+                            Debracketed{.range{tokens[i].range}, .t{std::forward<T>(t)}});
                     } else {
                         static_assert(false, "Not exhaustive");
                     }

@@ -30,7 +30,7 @@ namespace de_double_bracket {
                                              std::is_same_v<T, token::Assign> ||
                                              std::is_same_v<T, token::OperatorBinary> ||
                                              std::is_same_v<T, token::OperatorUnary>) {
-                            ss << token::to_string({t});
+                            ss << token::to_string(t);
                         } else {
                             static_assert(false, "Non exhaustive");
                         }
@@ -115,8 +115,7 @@ TEST(Parse, DeDoubleBracket) {
 )");
     auto range_2nd_inner_array =
         std::get<de_double_bracket::Node>(debracketed.elements[3][4].t).elements[7][0].range;
-    EXPECT_EQ(range_2nd_inner_array.to_string(),
-              "47:2-54:3");
+    EXPECT_EQ(range_2nd_inner_array.to_string(), "47:2-54:3");
 
     const char* const missing_2_close_b = "((\n"
                                           "( (V) + 1*1 );\n"
