@@ -27,13 +27,16 @@ target_link_libraries(lib PRIVATE vendor)
 find_package(tl-expected CONFIG REQUIRED)
 target_link_libraries(lib PRIVATE tl::expected)
 
+find_package(Boost CONFIG REQUIRED)
+target_link_libraries(lib PRIVATE Boost::boost)
+
 
 file(GLOB_RECURSE src CONFIGURE_DEPENDS "src/*.cpp")
 add_executable(circle-lang ${src})
 target_link_libraries(circle-lang PRIVATE lib)
 
-find_package(boost_program_options CONFIG REQUIRED)
-target_link_libraries(circle-lang PRIVATE Boost::program_options)
+find_package(Boost CONFIG REQUIRED COMPONENTS program_options)
+target_link_libraries(circle-lang PRIVATE Boost::boost Boost::program_options)
 
 
 enable_testing()

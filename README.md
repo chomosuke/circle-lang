@@ -16,3 +16,8 @@ Do `circle-lang <file-name>` to interpret a file.
 - run `sh make.sh`.
 - run `sh run.sh <source-file-name>`.
 - The binary can be found in `./build/circle-lang`.
+
+## Add dependencies
+- Modify vcpkg.json
+- run `sh make.sh`
+- Modify CmakeLists.txt
