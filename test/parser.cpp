@@ -115,6 +115,7 @@ TEST(Parse, DeDoubleBracket) {
 ( F_print_str )
 ( S ) := {0 0}{1}
 )");
+    ss.str("");
     auto range_2nd_inner_array =
         std::get<de_double_bracket::Node>(debracketed.elements[3][4].t).elements[7][0].range;
     EXPECT_EQ(range_2nd_inner_array.to_string(), "47:2-54:3");
@@ -127,11 +128,9 @@ TEST(Parse, DeDoubleBracket) {
     tokens = *lex(missing_2_close_b, diags);
     EXPECT_TRUE(diags.empty());
 
-    ss.clear();
     EXPECT_FALSE(de_double_bracket::parse(tokens, diags));
-    EXPECT_EQ(to_string(std::move(diags)),
-              "1:1-1:2: Can not find matching \"))\"\n"
-              "4:19-4:20: Can not find matching \"))\"\n");
+    EXPECT_EQ(to_string(std::move(diags)), "[ERROR] 1:1-1:2: Can not find matching \"))\"\n"
+                                           "[ERROR] 4:19-4:20: Can not find matching \"))\"\n");
     diags.clear();
 
     const char* const missing_2_open_b = "( (V) + 1*1 );\n"
@@ -140,11 +139,33 @@ TEST(Parse, DeDoubleBracket) {
 
     tokens = *lex(missing_2_open_b, diags);
     EXPECT_TRUE(diags.empty());
-    ss.clear();
 
     EXPECT_FALSE(de_double_bracket::parse(tokens, diags));
-    EXPECT_EQ(to_string(std::move(diags)),
-              "2:18-2:19: Can not find matching \"((\"\n"
-              "3:30-3:31: Can not find matching \"((\"\n");
+    EXPECT_EQ(to_string(std::move(diags)), "[ERROR] 2:18-2:19: Can not find matching \"((\"\n"
+                                           "[ERROR] 3:30-3:31: Can not find matching \"((\"\n");
+    diags.clear();
+
+    const char* const extra_semi = "((\n"
+                                   ";( (V) + 1*1 );\n"
+                                   "(V) := (V) + 1*1;;\n"
+                                   "( (V) )(Array) := (( ( (V) )(0) ));\n"
+                                   "));\n";
+    tokens = *lex(extra_semi, diags);
+    EXPECT_TRUE(diags.empty());
+
+    debracketed = *de_double_bracket::parse(tokens, diags);
+    de_double_bracket::print(ss, debracketed, 0);
+    EXPECT_EQ(ss.str(), R"(
+((
+    ( ( V ) + {0 1}{1} * {0 1}{1} )
+    ( V ) := ( V ) + {0 1}{1} * {0 1}{1}
+    ( ( V ) )( Array ) := ((
+        ( ( V ) )( {0 0}{1} )
+    ))
+))
+)");
+    EXPECT_EQ(to_string(std::move(diags)), "[WARNING] 2:1-2:1: Extra ';' found\n"
+                                           "[WARNING] 3:18-3:18: Extra ';' found\n");
+    ss.str("");
     diags.clear();
 }

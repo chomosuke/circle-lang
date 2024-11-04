@@ -19,7 +19,7 @@ TEST(Lex, HelloWorld) {
     auto invalid_op = lex("(( (V) + 1*1 );\n"
                           "(V) := (V) + 1**1;\n"
                           "( (V) )(Array) := ( (V) )(0);)\n", diags);
-    EXPECT_EQ(diag::to_string(diags), "2:15-2:16: \"**\" is not a valid operator.\n");
+    EXPECT_EQ(diag::to_string(diags), "[ERROR] 2:15-2:16: \"**\" is not a valid operator.\n");
 
     diags.clear();
     auto hello_world = *lex(sample_programs::HELLO_WORLD, diags);

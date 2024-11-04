@@ -28,6 +28,14 @@ namespace diag {
         });
         std::stringstream ss;
         for (const auto& d : ds) {
+            switch (d.level) {
+            case error:
+                ss << "[ERROR] ";
+                break;
+            case warning:
+                ss << "[WARNING] ";
+                break;
+            }
             ss << d.to_string() << '\n';
         }
         return ss.str();
