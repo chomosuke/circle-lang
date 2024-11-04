@@ -3,6 +3,7 @@
 #include <ostream>
 #include <string>
 
+// NOLINTNEXTLINE(clang-diagnostic-unused-parameter, misc-unused-parameters)
 void interpret(const std::string& src_code, std::istream& /*in*/, std::ostream& out,
                std::ostream& err) {
     diag::Diags diags;

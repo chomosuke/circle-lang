@@ -60,3 +60,7 @@ CheckOptions:
     value:           lower_case
   - key:             readability-identifier-naming.UnionCase
     value:           CamelCase
+
+  - key: cppcoreguidelines-rvalue-reference-param-not-moved.AllowPartialMove
+    value: true
+
