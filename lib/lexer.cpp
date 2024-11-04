@@ -267,7 +267,7 @@ namespace partial {
 } // namespace partial
 
 namespace token {
-    Comment::Comment(std::string&& content) : content{content} {}
+    Comment::Comment(std::string&& content) : content{std::move(content)} {}
 
     Number::Number(number::Value&& value) : value{std::move(value)} {}
 } // namespace token

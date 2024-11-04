@@ -7,7 +7,7 @@
 
 namespace number {
     namespace op {
-        enum Binary {
+        enum Binary : std::uint8_t {
             plus,
             minus,
             multiply,
@@ -22,7 +22,7 @@ namespace number {
             greater,
             greater_or_equal,
         };
-        enum Unary {
+        enum Unary : std::uint8_t {
             bool_not,
         };
 

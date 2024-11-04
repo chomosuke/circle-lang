@@ -7,8 +7,8 @@ void interpret(const std::string& src_code, std::istream& /*in*/, std::ostream& 
                std::ostream& err) {
     auto lexed = lex(src_code);
     if (!lexed) {
-        auto diagnostic = lexed.error();
-        err << diagnostic.to_string() << std::endl;
+        const auto& diagnostic = lexed.error();
+        err << diagnostic.to_string() << '\n';
         return;
     }
     auto& tokens = lexed.value();
