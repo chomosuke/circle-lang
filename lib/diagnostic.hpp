@@ -1,9 +1,10 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <tl/expected.hpp>
 
-namespace diagnostic {
+namespace diag {
     // Zero indexed
     struct Position {
         int line;
@@ -22,7 +23,13 @@ namespace diagnostic {
         [[nodiscard]] std::string to_string() const;
     };
 
+    enum Level : std::uint8_t {
+        error,
+        warning,
+    };
+
     struct Diagnostic {
+        Level level;
         Range range;
         std::string message;
 
@@ -30,11 +37,10 @@ namespace diagnostic {
     };
     std::string to_string(std::vector<Diagnostic> ds);
 
-    template <typename T> using Expected = tl::expected<T, Diagnostic>;
-    template <typename T> using ExpectedV = tl::expected<T, std::vector<Diagnostic>>;
+    using Diags = std::vector<diag::Diagnostic>;
 
     template <typename T> struct WithInfo {
         Range range;
         T t;
     };
-} // namespace diagnostic
+} // namespace diag

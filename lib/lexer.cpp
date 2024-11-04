@@ -272,10 +272,10 @@ namespace token {
     Number::Number(number::Value&& value) : value{std::move(value)} {}
 } // namespace token
 
-diagnostic::Expected<std::vector<token::Token>> lex(std::string_view src_code) {
+std::optional<std::vector<token::Token>> lex(std::string_view src_code, diag::Diags& diags) {
     std::vector<token::Token> tokens{};
     std::unique_ptr<partial::Token> partial{std::make_unique<partial::WhiteSpace>()};
-    diagnostic::Range range{.start{.line{0}, .column{0}}, .end{.line{0}, .column{0}}};
+    diag::Range range{.start{.line{0}, .column{0}}, .end{.line{0}, .column{0}}};
     for (const char& c : src_code) {
         auto maybe_next_state = partial->read_char(c);
         if (maybe_next_state) {
@@ -283,13 +283,15 @@ diagnostic::Expected<std::vector<token::Token>> lex(std::string_view src_code) {
             if (next_state) {
                 partial = std::move(next_state->first);
                 if (next_state->second) {
-                    tokens.push_back(token::Token{.range{range}, .t{std::move(*next_state->second)}});
+                    tokens.push_back(
+                        token::Token{.range{range}, .t{std::move(*next_state->second)}});
                 }
                 range.start = range.end;
             }
         } else {
-            return tl::unexpected(
-                diagnostic::Diagnostic{.range{range}, .message{maybe_next_state.error()}});
+            diags.push_back(diag::Diagnostic{
+                .level{diag::error}, .range{range}, .message{maybe_next_state.error()}});
+            return std::nullopt;
         }
         if (c == '\n') {
             range.end.column = 0;

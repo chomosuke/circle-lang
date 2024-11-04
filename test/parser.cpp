@@ -13,7 +13,7 @@ namespace de_double_bracket {
     }
 
     void print(std::ostream& ss, const Node& n, int indent) {
-        ss << std::endl;
+        ss << '\n';
         for (const auto& element : n.elements) {
             print_indent(ss, indent);
             for (const auto& token : element) {
@@ -37,16 +37,18 @@ namespace de_double_bracket {
                     },
                     token.t);
             }
-            ss << std::endl;
+            ss << '\n';
         }
     }
 } // namespace de_double_bracket
 
 TEST(Parse, DeDoubleBracket) {
     std::stringstream ss;
-    auto tokens = lex(sample_programs::HELLO_WORLD).value();
-    std::vector<diagnostic::Range> ranges;
-    auto debracketed = de_double_bracket::parse(tokens, ranges).value().first;
+    auto diags = std::vector<diag::Diagnostic>();
+    auto tokens = *lex(sample_programs::HELLO_WORLD, diags);
+    EXPECT_TRUE(diags.empty());
+    auto debracketed = *de_double_bracket::parse(tokens, diags);
+    EXPECT_TRUE(diags.empty());
     de_double_bracket::print(ss, debracketed, 0);
     EXPECT_EQ(ss.str(), R"(
 ( S )
@@ -122,19 +124,27 @@ TEST(Parse, DeDoubleBracket) {
                                           "(V) := (V) + 1*1;\n"
                                           "( (V) )(Array) := (( ( (V) )(0);\n"
                                           "\n";
-    tokens = lex(missing_2_close_b).value();
+    tokens = *lex(missing_2_close_b, diags);
+    EXPECT_TRUE(diags.empty());
+
     ss.clear();
-    ranges.clear();
-    EXPECT_EQ(to_string(std::move(de_double_bracket::parse(tokens, ranges).error())),
+    EXPECT_FALSE(de_double_bracket::parse(tokens, diags));
+    EXPECT_EQ(to_string(std::move(diags)),
               "1:1-1:2: Can not find matching \"))\"\n"
               "4:19-4:20: Can not find matching \"))\"\n");
+    diags.clear();
+
     const char* const missing_2_open_b = "( (V) + 1*1 );\n"
                                          "(V) := (V) + 1*1 ));\n"
                                          "( (V) )(Array) := ( (V) )(0) ));\n";
-    tokens = lex(missing_2_open_b).value();
+
+    tokens = *lex(missing_2_open_b, diags);
+    EXPECT_TRUE(diags.empty());
     ss.clear();
-    ranges.clear();
-    EXPECT_EQ(to_string(std::move(de_double_bracket::parse(tokens, ranges).error())),
+
+    EXPECT_FALSE(de_double_bracket::parse(tokens, diags));
+    EXPECT_EQ(to_string(std::move(diags)),
               "2:18-2:19: Can not find matching \"((\"\n"
               "3:30-3:31: Can not find matching \"((\"\n");
+    diags.clear();
 }

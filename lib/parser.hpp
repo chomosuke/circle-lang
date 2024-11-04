@@ -18,7 +18,7 @@ namespace ast {
 
     using Any = std::variant<Array, Assign, Index, OperatorBinary, OperatorUnary, Number>;
 
-    template <typename T> using Node = diagnostic::WithInfo<std::unique_ptr<T>>;
+    template <typename T> using Node = diag::WithInfo<std::unique_ptr<T>>;
 
     struct Array {
         std::vector<Node<Any>> elements;
@@ -58,4 +58,4 @@ namespace ast {
     };
 } // namespace ast
 
-diagnostic::ExpectedV<ast::Array> parse(std::span<token::Token> tokens);
+std::optional<ast::Array> parse(std::span<token::Token> tokens, diag::Diags &diags);

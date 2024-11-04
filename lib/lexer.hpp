@@ -48,7 +48,7 @@ namespace token {
         OperatorBinary,        //
         OperatorUnary>;
 
-    using Token = diagnostic::WithInfo<Kind>;
+    using Token = diag::WithInfo<Kind>;
 } // namespace token
 
-diagnostic::Expected<std::vector<token::Token>> lex(std::string_view src_code);
+std::optional<std::vector<token::Token>> lex(std::string_view src_code, diag::Diags &diags);

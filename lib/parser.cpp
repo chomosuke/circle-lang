@@ -6,67 +6,76 @@
 
 namespace de_double_bracket {
     struct Node;
-    using Debracketed = diagnostic::WithInfo<std::variant< //
-        token::OpenBracket,                                //
-        token::CloseBracket,                               //
-        token::Number,                                     //
-        token::Assign,                                     //
-        token::OperatorBinary,                             //
-        token::OperatorUnary,                              //
+    using Debracketed = diag::WithInfo<std::variant< //
+        token::OpenBracket,                          //
+        token::CloseBracket,                         //
+        token::Number,                               //
+        token::Assign,                               //
+        token::OperatorBinary,                       //
+        token::OperatorUnary,                        //
         Node>>;
+    using Element = std::vector<Debracketed>;
     struct Node {
         NON_COPIABLE(Node)
 
-        std::vector<std::vector<Debracketed>> elements;
-        explicit Node(std::vector<std::vector<Debracketed>>&& elements)
-            : elements(std::move(elements)) {}
+        std::vector<Element> elements;
+        explicit Node(std::vector<Element>&& elements) : elements(std::move(elements)) {}
     };
 
-    diagnostic::ExpectedV<std::pair<Node, int>>
-    parse(std::span<token::Token> tokens, std::vector<diagnostic::Range>& open_b_ranges) {
-        std::vector<std::vector<Debracketed>> elements{};
-        elements.emplace_back();
+    std::optional<Node> parse(std::span<token::Token> tokens, diag::Diags& diags) {
+
+        auto elements_stack = std::vector<std::vector<Element>>();
+        elements_stack.emplace_back();
+        elements_stack.back().emplace_back();
+
+        auto open_b_ranges = std::vector<diag::Range>();
+
         for (int i{0}; i < tokens.size(); i++) {
-            auto r = std::visit(
-                [&]<typename T>(
-                    T&& t) -> std::optional<diagnostic::ExpectedV<std::pair<Node, int>>> {
+            auto early_return = std::visit(
+                [&]<typename T>(T&& t) -> bool {
                     static_assert(std::is_same_v<T, std::decay_t<T>>);
                     if constexpr (std::is_same_v<T, token::OpenBracket2>) {
                         open_b_ranges.push_back(tokens[i].range);
-                        auto node_i = parse(tokens.subspan(i + 1), open_b_ranges);
-                        if (!node_i) {
-                            return std::make_optional(tl::unexpected(node_i.error()));
-                        } else {
-                            auto node = std::move(node_i.value().first);
-                            auto new_i = i + node_i.value().second + 1;
-                            elements.back().push_back(
-                                {.range{diagnostic::Range{.start{tokens[i].range.start},
-                                                          .end{tokens[new_i].range.end}}},
-                                 .t{std::move(node)}});
-                            i = new_i;
-                        }
+                        elements_stack.emplace_back();
+                        elements_stack.back().emplace_back();
                     } else if constexpr (std::is_same_v<T, token::CloseBracket2>) {
-                        if (open_b_ranges.empty()) {
-                            std::vector<diagnostic::Diagnostic> ds;
+                        if (!open_b_ranges.empty()) {
+                            auto elements = std::move(elements_stack.back());
+                            elements_stack.pop_back();
+                            if (elements.back().empty()) {
+                                // For tailing ;
+                                elements.pop_back();
+                            }
+                            auto start_range = open_b_ranges.back();
+                            open_b_ranges.pop_back();
+                            elements_stack.back().back().push_back(
+                                {.range{diag::Range{.start{start_range.start},
+                                                    .end{tokens[i].range.end}}},
+                                 .t{Node{std::move(elements)}}});
+                        } else {
                             for (; i < tokens.size(); i++) {
                                 std::visit(
                                     [&]<typename T2>(const T2&) {
                                         static_assert(std::is_same_v<T2, std::decay_t<T2>>);
                                         if constexpr (std::is_same_v<T2, token::CloseBracket2>) {
-                                            ds.push_back(diagnostic::Diagnostic{
+                                            diags.push_back(diag::Diagnostic{
+                                                .level{diag::error},
                                                 .range{tokens[i].range},
                                                 .message{R"(Can not find matching "((")"}});
                                         }
                                     },
                                     tokens[i].t);
                             }
-                            return std::make_optional(tl::unexpected(ds));
-                        } else {
-                            open_b_ranges.pop_back();
-                            return std::make_optional(std::make_pair(Node{std::move(elements)}, i));
+                            return true;
                         }
                     } else if constexpr (std::is_same_v<T, token::Semicolon>) {
-                        elements.emplace_back();
+                        if (elements_stack.back().back().empty()) {
+                            diags.push_back(diag::Diagnostic{.level{diag::warning},
+                                                             .range{tokens[i].range},
+                                                             .message{"Extra ';' found"}});
+                        } else {
+                            elements_stack.back().emplace_back();
+                        }
                     } else if constexpr (std::is_same_v<T, token::Comment>) {
                         // do nothing
                     } else if constexpr (std::is_same_v<T, token::OpenBracket> ||
@@ -75,81 +84,77 @@ namespace de_double_bracket {
                                          std::is_same_v<T, token::Assign> ||
                                          std::is_same_v<T, token::OperatorBinary> ||
                                          std::is_same_v<T, token::OperatorUnary>) {
-                        elements.back().push_back(
+                        elements_stack.back().back().push_back(
                             Debracketed{.range{tokens[i].range}, .t{std::forward<T>(t)}});
                     } else {
                         static_assert(false, "Not exhaustive");
                     }
-                    return std::nullopt;
+                    return false;
                 },
                 std::move(tokens[i].t));
-            if (r) {
-                if (*r) {
-                    auto& elements = (*r)->first.elements;
-                    if (elements.back().empty()) {
-                        elements.pop_back();
-                    }
-                }
-                return std::move(*r);
+            if (early_return) {
+                return std::nullopt;
             }
         }
         if (!open_b_ranges.empty()) {
-            std::vector<diagnostic::Diagnostic> ds;
-            ds.reserve(open_b_ranges.size());
+            diags.reserve(open_b_ranges.size());
             for (const auto& range : open_b_ranges) {
-                ds.push_back(diagnostic::Diagnostic{
-                    .range{range}, .message{R"range(Can not find matching "))")range"}});
+                diags.push_back(diag::Diagnostic{.level{diag::error},
+                                              .range{range},
+                                              .message{R"range(Can not find matching "))")range"}});
             }
-            return tl::unexpected(ds);
+            return std::nullopt;
         } else {
-            if (elements.back().empty()) {
-                elements.pop_back();
+            assert(elements_stack.size() == 1);
+            if (elements_stack.back().back().empty()) {
+                // For tailing ;
+                elements_stack.back().pop_back();
             }
-            return std::make_pair(Node{std::move(elements)}, tokens.size());
+            return Node{std::move(elements_stack.back())};
         }
     }
 } // namespace de_double_bracket
 
-namespace de_single_bracket {
-    struct Node;
-    using Debracketed = diagnostic::WithInfo<std::variant< //
-        token::Number,                                     //
-        token::Assign,                                     //
-        token::OperatorBinary,                             //
-        token::OperatorUnary,                              //
-        Node>>;
-    struct Node {
-        NON_COPIABLE(Node)
-
-        std::vector<Debracketed> childrens;
-        explicit Node(std::vector<Debracketed>&& childrens) : childrens(std::move(childrens)) {}
-    };
-
-    diagnostic::ExpectedV<std::vector<Debracketed>>
-    parse(const std::vector<de_double_bracket::Debracketed>& tokens) {
-        auto debracketed = std::vector<std::vector<Debracketed>>{};
-        debracketed.emplace_back();
-
-        for (const auto& token : tokens) {
-            std::visit(
-                [&]<typename T>(const T& t) {
-
-                },
-                token.t);
-        }
-
-        return std::move(debracketed[0]);
-    }
-} // namespace de_single_bracket
+// namespace de_single_bracket {
+//     struct Node;
+//     using Debracketed = diag::WithInfo<std::variant< //
+//         token::Number,                               //
+//         token::Assign,                               //
+//         token::OperatorBinary,                       //
+//         token::OperatorUnary,                        //
+//         Node>>;
+//     struct Node {
+//         NON_COPIABLE(Node)
+//
+//         std::vector<Debracketed> childrens;
+//         explicit Node(std::vector<Debracketed>&& childrens) : childrens(std::move(childrens)) {}
+//     };
+//
+//     diag::ExpectedV<std::vector<Debracketed>>
+//     parse(const std::vector<de_double_bracket::Debracketed>& tokens) {
+//         auto debracketed = std::vector<std::vector<Debracketed>>{};
+//         debracketed.emplace_back();
+//
+//         for (const auto& token : tokens) {
+//             std::visit(
+//                 [&]<typename T>(const T& t) {
+//
+//                 },
+//                 token.t);
+//         }
+//
+//         return std::move(debracketed[0]);
+//     }
+// } // namespace de_single_bracket
 
 // namespace to_ast {
-//     diagnostic::ExpectedV<ast::Node<ast::Any>>
+//     diag::ExpectedV<ast::Node<ast::Any>>
 //     parse_element(const std::vector<de_double_bracket::Debracketed> tokens) {}
 //
-//     diagnostic::ExpectedV<ast::Node<ast::Array>>
-//     parse_array(const diagnostic::WithInfo<de_double_bracket::Node>& node) {
+//     diag::ExpectedV<ast::Node<ast::Array>>
+//     parse_array(const diag::WithInfo<de_double_bracket::Node>& node) {
 //         ast::Array
-//         std::vector<diagnostic::Diagnostic> ds{};
+//         std::vector<diag::Diagnostic> ds{};
 //         for (const auto& element : node.t.elements) {
 //             auto e = parse_element(element);
 //             if (e) {
@@ -161,14 +166,13 @@ namespace de_single_bracket {
 //     }
 // } // namespace to_ast
 
-diagnostic::ExpectedV<ast::Array> parse(std::span<token::Token> tokens) {
-    std::vector<diagnostic::Range> open_b_ranges{};
-    auto d_nodes_i = de_double_bracket::parse(tokens, open_b_ranges);
+std::optional<ast::Array> parse(std::span<token::Token> tokens, diag::Diags& diags) {
+    auto d_nodes_i = de_double_bracket::parse(tokens, diags);
     if (!d_nodes_i) {
-        return tl::unexpected(d_nodes_i.error());
+        return std::nullopt;
     }
-    auto d_nodes = std::move(d_nodes_i.value().first);
-    auto range = diagnostic::Range{};
+    auto d_nodes = std::move(*d_nodes_i);
+    auto range = diag::Range{};
     for (const auto& e : d_nodes.elements) {
         for (const auto& t : e) {
             range.start = t.range.start;

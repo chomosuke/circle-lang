@@ -13,15 +13,18 @@ std::string tokens_to_string(const std::vector<token::Token>& ts) {
 }
 
 TEST(Lex, HelloWorld) {
-    EXPECT_EQ(tokens_to_string(lex(R"()").value()), "");
-    EXPECT_EQ(lex("(( (V) + 1*1 );\n"
-                  "(V) := (V) + 1**1;\n"
-                  "( (V) )(Array) := ( (V) )(0);)\n")
-                  .error()
-                  .to_string(),
-              R"(2:15-2:16: "**" is not a valid operator.)");
+    auto diags = std::vector<diag::Diagnostic>();
+    EXPECT_EQ(tokens_to_string(lex(R"()", diags).value()), "");
+    EXPECT_TRUE(diags.empty());
+    auto invalid_op = lex("(( (V) + 1*1 );\n"
+                          "(V) := (V) + 1**1;\n"
+                          "( (V) )(Array) := ( (V) )(0);)\n", diags);
+    EXPECT_EQ(diag::to_string(diags), "2:15-2:16: \"**\" is not a valid operator.\n");
 
-    auto hello_world = lex(sample_programs::HELLO_WORLD).value();
+    diags.clear();
+    auto hello_world = *lex(sample_programs::HELLO_WORLD, diags);
+    EXPECT_TRUE(diags.empty());
+
     EXPECT_EQ(
         tokens_to_string(hello_world),
         "( S ); ( V ) := V_a; # ((array)) -> len( F_len ) := (( ( ( V ) + {0 1}{1} * {0 1}{1} ); ( "

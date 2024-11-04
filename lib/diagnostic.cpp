@@ -4,7 +4,7 @@
 #include <sstream>
 #include <string>
 
-namespace diagnostic {
+namespace diag {
     int Position::operator<=>(const Position& p) const {
         if (line != p.line) {
             return line - p.line;
@@ -32,4 +32,4 @@ namespace diagnostic {
         }
         return ss.str();
     }
-} // namespace diagnostic
+} // namespace diag

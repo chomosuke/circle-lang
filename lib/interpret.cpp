@@ -5,12 +5,16 @@
 
 void interpret(const std::string& src_code, std::istream& /*in*/, std::ostream& out,
                std::ostream& err) {
-    auto lexed = lex(src_code);
+    diag::Diags diags;
+    auto lexed = lex(src_code, diags);
     if (!lexed) {
-        const auto& diagnostic = lexed.error();
-        err << diagnostic.to_string() << '\n';
+        err << diag::to_string(diags) << '\n';
         return;
     }
     auto& tokens = lexed.value();
-    parse(tokens);
+    auto parsed = parse(tokens, diags);
+    if (!parsed) {
+        err << diag::to_string(diags) << '\n';
+        return;
+    }
 }
