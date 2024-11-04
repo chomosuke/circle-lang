@@ -1,5 +1,5 @@
 #include "lib/lexer.cpp"
-#include "test/sample_programs.hpp"
+#include "sample_programs.hpp"
 #include "token_to_string.cpp"
 #include <gtest/gtest.h>
 #include <variant>

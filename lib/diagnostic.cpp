@@ -1,4 +1,5 @@
 #include "diagnostic.hpp"
+#include <algorithm>
 #include <format>
 #include <sstream>
 #include <string>
@@ -22,13 +23,16 @@ namespace diagnostic {
     }
 
     std::string to_string(std::vector<Diagnostic> ds) {
-        std::sort(ds.begin(), ds.end(), [](const Diagnostic& a, const Diagnostic& b) {
+        std::ranges::sort(ds, [](const Diagnostic& a, const Diagnostic& b) {
             return a.range.start < b.range.start;
         });
         std::stringstream ss;
         for (const auto& d : ds) {
-            ss << d.to_string() << std::endl;
+            ss << d.to_string() << '\n';
         }
         return ss.str();
     }
+
+    UnexpectedV::UnexpectedV(std::vector<Diagnostic>&& ds) : m_ds{std::move(ds)} {}
+    std::vector<Diagnostic> UnexpectedV::extract_ds() { return std::move(m_ds); }
 } // namespace diagnostic

@@ -111,7 +111,7 @@ namespace number {
 
     Value::Value(const BigInt& number) : m_numerator{0, number}, m_denominator{1} {}
 
-    const std::vector<BigInt>& Value::get_numerator() const  { return m_numerator; }
+    const std::vector<BigInt>& Value::get_numerator() const { return m_numerator; }
 
     const std::vector<BigInt>& Value::get_denominator() const { return m_denominator; }
 
