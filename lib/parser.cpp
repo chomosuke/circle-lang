@@ -209,60 +209,65 @@ namespace de_bracket {
     }
 } // namespace de_bracket
 
-// namespace ast {
-//     diagnostic::ExpectedV<Node<Any>> parse_any(std::span<de_single_bracket::Debracketed> tokens)
-//     {
-//         assert(tokens.size() > 0);
-//         // check if this is an assignment
-//         if (tokens.size() >= 1 && std::holds_alternative<token::Assign>(tokens[1].t)) {
-//         }
-//         for (auto& token : tokens) {
-//             std::visit(
-//                 [&]<typename T>(T&& t) {
-//                     static_assert(std::is_same_v<T, std::decay_t<T>>);
-//                     if constexpr (std::is_same_v<T, token::Number>) {
-//                     } else if constexpr (std::is_same_v<T, token::Assign>) {
-//                     } else if constexpr (std::is_same_v<T, token::OperatorUnary>) {
-//                     } else if constexpr (std::is_same_v<T, token::OperatorBinary>) {
-//                     } else if constexpr (std::is_same_v<T, de_double_bracket::Node>) {
-//                     } else if constexpr (std::is_same_v<T, de_single_bracket::Node>) {
-//                     } else {
-//                         static_assert(std::is_same_v<T, void>, "Non exhaustive");
-//                     }
-//                 },
-//                 std::move(token.t));
-//         }
-//     }
-//
-//     diagnostic::ExpectedV<Node<Any>>
-//     parse_element(std::vector<de_double_bracket::Debracketed>&& tokens) {
-//         auto db_tokens_ex = de_single_bracket::parse(std::move(tokens));
-//         if (!db_tokens_ex.has_value()) {
-//             return tl::unexpected(db_tokens_ex.error());
-//         }
-//         auto db_tokens = std::move(db_tokens_ex.value());
-//         return parse_any(db_tokens);
-//     }
-//
-//     diagnostic::ExpectedV<Node<Array>>
-//     parse_array(diagnostic::WithInfo<de_double_bracket::Node>&& node) {
-//         auto elements = std::vector<Node<Any>>{};
-//         auto ds = std::vector<diagnostic::Diagnostic>{};
-//         for (auto& element : node.t.elements) {
-//             auto e = parse_element(std::move(element));
-//             if (e.has_value()) {
-//                 elements.push_back(std::move(e.value()));
-//             } else {
-//                 ds.insert(ds.end(), e.error().begin(), e.error().end());
-//             }
-//         }
-//         if (!ds.empty()) {
-//             return tl::unexpected(ds);
-//         }
-//         return Node<Array>{.range{node.range},
-//                            .t{std::make_unique<Array>(Array{.elements{std::move(elements)}})}};
-//     }
-// } // namespace ast
+namespace ast {
+    Array parse_double(de_bracket::DoubleBracket&& node, diag::Diags& diags);
+    Node<Any> parse_any(std::vector<de_bracket::Debracketed>&& tokens, diag::Diags& diags);
+
+    Array parse_double(de_bracket::DoubleBracket&& node, diag::Diags& diags) {
+        auto elements = std::vector<Node<Any>>();
+        for (auto&& element : std::move(node.elements)) {
+            elements.push_back(parse_any(std::move(element), diags));
+        }
+        return Array{.elements{std::move(elements)}};
+    }
+
+    // lower tighter
+    int get_precedence(number::op::Binary b) {
+        switch (b) {
+        case number::op::multiply:
+        case number::op::divide:
+        case number::op::remainder:
+            return 0;
+        case number::op::plus:
+        case number::op::minus:
+            return 1;
+        case number::op::equal:
+        case number::op::not_equal:
+        case number::op::smaller:
+        case number::op::smaller_or_equal:
+        case number::op::greater:
+        case number::op::greater_or_equal:
+            return 2;
+        case number::op::bool_and:
+        case number::op::bool_or:
+            return 3;
+        }
+    }
+
+    Node<Any> parse_any(std::vector<de_bracket::Debracketed>&& tokens, diag::Diags& diags) {
+        auto output = std::vector<Node<Any>>();
+        for (auto&& token : std::move(tokens)) {
+            std::visit(
+                [&]<typename T>(T&& t) {
+                    if constexpr (std::is_same_v<T, de_bracket::DoubleBracket>) {
+                        auto arr = parse_double(std::forward<T>(t), diags);
+                        output.push_back({.range{token.range}, .t{std::make_unique<Any>(std::move(arr))}});
+                    } else if constexpr (std::is_same_v<T, de_bracket::SingleBracket>) {
+                        auto expr = parse_any(std::move(t.children), diags);
+                        auto index = Index{};
+                        output.push_back({.range{token.range}, .t{std::make_unique<Any>(std::move(expr))}})
+                    } else if constexpr (std::is_same_v<T, token::Number>) {
+                    } else if constexpr (std::is_same_v<T, token::Assign>) {
+                    } else if constexpr (std::is_same_v<T, token::OperatorBinary>) {
+                    } else if constexpr (std::is_same_v<T, token::OperatorUnary>) {
+                    } else {
+                        static_assert(false, "Non exhaustive");
+                    }
+                },
+                std::move(token.t));
+        }
+    }
+} // namespace ast
 
 std::optional<ast::Array> parse(std::span<token::Token> tokens, diag::Diags& diags) {
     auto d_nodes_i = de_double_bracket::parse(tokens, diags);
@@ -270,19 +275,7 @@ std::optional<ast::Array> parse(std::span<token::Token> tokens, diag::Diags& dia
         return std::nullopt;
     }
     auto d_nodes = std::move(*d_nodes_i);
-    auto range = diag::Range{};
-    for (const auto& e : d_nodes.elements) {
-        for (const auto& t : e) {
-            range.start = t.range.start;
-        }
-    }
-    for (const auto& e : d_nodes.elements) {
-        for (const auto& t : e) {
-            range.start = t.range.start;
-        }
-    }
+    auto debracketed = de_bracket::parse(std::move(d_nodes), diags);
 
-    return ast::Array{};
-    // return to_ast::parse_array({.range{}, .t{std::move(d_nodes)}})
-    //     .map([](ast::Node<ast::Array> a) -> ast::Array { return std::move(*a.t.release()); });
+    return ast::parse_double(std::move(debracketed), diags);
 }

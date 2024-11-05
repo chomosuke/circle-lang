@@ -34,7 +34,7 @@ namespace ast {
     struct Index {
         NON_COPIABLE(Index)
 
-        Node<Any> subject;
+        std::optional<Node<Any>> subject;
         Node<Any> index;
     };
 
@@ -58,4 +58,4 @@ namespace ast {
     };
 } // namespace ast
 
-std::optional<ast::Array> parse(std::span<token::Token> tokens, diag::Diags &diags);
+std::optional<ast::Array> parse(std::span<token::Token> tokens, diag::Diags& diags);
