@@ -221,7 +221,7 @@ namespace ast {
         return Array{.elements{std::move(elements)}};
     }
 
-    // lower tighter
+    // lesser tighter
     int get_precedence(number::op::Binary b) {
         switch (b) {
         case number::op::multiply:
@@ -244,18 +244,37 @@ namespace ast {
         }
     }
 
-    Node<Any> parse_any(std::vector<de_bracket::Debracketed>&& tokens, diag::Diags& diags) {
-        auto output = std::vector<Node<Any>>();
+    using IR = diag::WithInfo<std::variant< //
+        token::Assign,                      //
+        token::OperatorBinary,              //
+        token::OperatorUnary,               //
+        Array,                              //
+        Assign,                             //
+        Index,                              //
+        OperatorBinary,                     //
+        OperatorUnary,                      //
+        Number                              //
+        >>;
+
+    std::vector<IR> parse_brackets_number(std::vector<de_bracket::Debracketed>&& tokens,
+                                          diag::Diags& diags) {
+        auto irs = std::vector<IR>();
         for (auto&& token : std::move(tokens)) {
             std::visit(
                 [&]<typename T>(T&& t) {
                     if constexpr (std::is_same_v<T, de_bracket::DoubleBracket>) {
                         auto arr = parse_double(std::forward<T>(t), diags);
-                        output.push_back({.range{token.range}, .t{std::make_unique<Any>(std::move(arr))}});
+                        irs.push_back({.range{token.range}, .t{std::move(arr)}});
                     } else if constexpr (std::is_same_v<T, de_bracket::SingleBracket>) {
                         auto expr = parse_any(std::move(t.children), diags);
-                        auto index = Index{};
-                        output.push_back({.range{token.range}, .t{std::make_unique<Any>(std::move(expr))}})
+                        auto last = std::make_optional<IR>();
+                        if (!irs.empty() && (std::holds_alternative<token::Array>(irs.back().t) ||
+                                             std::holds_alternative<token::Index>(irs.back().t) ||
+                                             std::holds_alternative<token::Index>(irs.back().t) ||
+                                             )) {
+                        }
+                        auto index = Index {}
+                        irs.push_back({.range{token.range}, .t{std::move(expr)}})
                     } else if constexpr (std::is_same_v<T, token::Number>) {
                     } else if constexpr (std::is_same_v<T, token::Assign>) {
                     } else if constexpr (std::is_same_v<T, token::OperatorBinary>) {
@@ -266,6 +285,13 @@ namespace ast {
                 },
                 std::move(token.t));
         }
+    }
+
+    std::vector<IR> parse_unary(std::vector<IR>&& irs, diag::Diags& diags) {}
+    std::vector<IR> parse_binary(std::vector<IR>&& irs, diag::Diags& diags) {}
+
+    Node<Any> parse_any(std::vector<de_bracket::Debracketed>&& tokens, diag::Diags& diags) {
+        auto output = std::vector<Node<Any>>();
     }
 } // namespace ast
 

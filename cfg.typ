@@ -7,6 +7,24 @@ $
 &"S" &::= &"ArrayBody" \
 
 &"Expr" &::= &"Expr0" \
+& & | & "Expr0 '&&' Assign" \
+& & | & "Expr0 '||' Assign" \
+& & | & "Expr0 '=' Assign" \
+& & | & "Expr0 '!=' Assign" \
+& & | & "Expr0 '<' Assign" \
+& & | & "Expr0 '>' Assign" \
+& & | & "Expr0 '<=' Assign" \
+& & | & "Expr0 '>=' Assign" \
+& & | & "Expr0 '+' Assign" \
+& & | & "Expr0 '-' Assign" \
+& & | & "Expr0 '*' Assign" \
+& & | & "Expr0 '/' Assign" \
+& & | & "Expr0 '%' Assign" \
+& & | & "Expr0 '+' Assign" \
+& & | & "'!' Assign" \
+& & | & "Assign" \
+
+&"Assign" &::= &"Index ':=' Expr" \
 
 &"Expr0" &::= &"Expr0 '&&' Expr1" \
 & & | & "Expr0 '||' Expr1" \
@@ -33,12 +51,9 @@ $
 & & | & "Expr5" \
 
 &"Expr5" &::= &"Index" \
-& & | & "Assign" \
 & & | & "Array" \
 & & | & italic("identifier") \
 & & | & italic("number") \
-
-&"Assign" &::= &"Index ':=' Expr" \
 
 &"Index" &::= &"'(' Expr ')'" \
 & & | & "Expr5 '(' Expr ')'" \
@@ -49,6 +64,3 @@ $
 & & | & "';' ArrayBody" \
 & & | & epsilon \
 $
-
-Assignment bind tightest to the left but loosest to the right. I can't figure
-out a way to make the grammar express that.
