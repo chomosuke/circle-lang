@@ -44,7 +44,7 @@ namespace de_double_bracket {
 
 TEST(Parse, DeDoubleBracket_HelloWorld) {
     std::stringstream ss;
-    auto diags = std::vector<diag::Diagnostic>();
+    auto diags = diag::Diags();
     auto tokens = *lex(sample_programs::HELLO_WORLD, diags);
     EXPECT_TRUE(diags.empty());
     auto debracketed = *de_double_bracket::parse(tokens, diags);
@@ -58,7 +58,7 @@ TEST(Parse, DeDoubleBracket_HelloWorld) {
 }
 
 TEST(Parse, DeDoubleBracket_MissingClosingBrackets) {
-    auto diags = std::vector<diag::Diagnostic>();
+    auto diags = diag::Diags();
     const char* const missing_2_close_b = "((\n"
                                           "( (V) + 1*1 );\n"
                                           "(V) := (V) + 1*1;\n"
@@ -68,12 +68,12 @@ TEST(Parse, DeDoubleBracket_MissingClosingBrackets) {
     EXPECT_TRUE(diags.empty());
 
     EXPECT_FALSE(de_double_bracket::parse(tokens, diags));
-    EXPECT_EQ(to_string(std::move(diags)), "[ERROR] 1:1-1:2: Can not find matching \"))\"\n"
-                                           "[ERROR] 4:19-4:20: Can not find matching \"))\"\n");
+    EXPECT_EQ(diags.to_string(), "[ERROR] 1:1-1:2: Can not find matching '))'\n"
+                                 "[ERROR] 4:19-4:20: Can not find matching '))'\n");
 }
 
 TEST(Parse, DeDoubleBracket_MissingOpenBrackets) {
-    auto diags = std::vector<diag::Diagnostic>();
+    auto diags = diag::Diags();
     const char* const missing_2_open_b = "( (V) + 1*1 );\n"
                                          "(V) := (V) + 1*1 ));\n"
                                          "( (V) )(Array) := ( (V) )(0) ));\n";
@@ -82,13 +82,13 @@ TEST(Parse, DeDoubleBracket_MissingOpenBrackets) {
     EXPECT_TRUE(diags.empty());
 
     EXPECT_FALSE(de_double_bracket::parse(tokens, diags));
-    EXPECT_EQ(to_string(std::move(diags)), "[ERROR] 2:18-2:19: Can not find matching \"((\"\n"
-                                           "[ERROR] 3:30-3:31: Can not find matching \"((\"\n");
+    EXPECT_EQ(diags.to_string(), "[ERROR] 2:18-2:19: Can not find matching '(('\n"
+                                 "[ERROR] 3:30-3:31: Can not find matching '(('\n");
 }
 
 TEST(Parse, DeDoubleBracket_ExtraSemi) {
     std::stringstream ss;
-    auto diags = std::vector<diag::Diagnostic>();
+    auto diags = diag::Diags();
     const char* const extra_semi = "((\n"
                                    ";( (V) + 1*1 );\n"
                                    "(V) := (V) + 1*1;;\n"
@@ -108,8 +108,8 @@ TEST(Parse, DeDoubleBracket_ExtraSemi) {
     ))
 ))
 )");
-    EXPECT_EQ(to_string(std::move(diags)), "[WARNING] 2:1-2:1: Extra ';' found\n"
-                                           "[WARNING] 3:18-3:18: Extra ';' found\n");
+    EXPECT_EQ(diags.to_string(), "[WARNING] 2:1-2:1: Extra ';' found\n"
+                                 "[WARNING] 3:18-3:18: Extra ';' found\n");
 }
 
 namespace de_bracket {
@@ -173,7 +173,7 @@ namespace de_bracket {
 
 TEST(Parse, DeSingleBracket_HelloWorld) {
     std::stringstream ss;
-    auto diags = std::vector<diag::Diagnostic>();
+    auto diags = diag::Diags();
     auto tokens = *lex(sample_programs::HELLO_WORLD, diags);
     EXPECT_TRUE(diags.empty());
     auto de_double_bracketed = *de_double_bracket::parse(tokens, diags);
@@ -192,12 +192,12 @@ TEST(Parse, DeSingleBracket_HelloWorld) {
 
 TEST(Parse, DeBracket_MissingClosingBrackets) {
     std::stringstream ss;
-    auto diags = std::vector<diag::Diagnostic>();
+    auto diags = diag::Diags();
     const char* const missing_close_b = "((\n"
-                                          "( (V) + 1*1 );\n"
-                                          "(V) := (V + 1*1;\n"
-                                          "( (V) )(Array) := (( ( (V (0) ));\n"
-                                          "));\n";
+                                        "( (V) + 1*1 );\n"
+                                        "(V) := (V + 1*1;\n"
+                                        "( (V) )(Array) := (( ( (V (0) ));\n"
+                                        "));\n";
     auto tokens = *lex(missing_close_b, diags);
     EXPECT_TRUE(diags.empty());
 
@@ -205,10 +205,9 @@ TEST(Parse, DeBracket_MissingClosingBrackets) {
     EXPECT_TRUE(diags.empty());
 
     auto debracketed = de_bracket::parse(std::move(de_double_bracketed), diags);
-    EXPECT_EQ(to_string(std::move(diags)), "[ERROR] 3:8-3:8: Can not find matching ')'\n"
-                                           "[ERROR] 4:22-4:22: Can not find matching ')'\n"
-                                           "[ERROR] 4:24-4:24: Can not find matching ')'\n"
-                                           );
+    EXPECT_EQ(diags.to_string(), "[ERROR] 3:8-3:8: Can not find matching ')'\n"
+                                 "[ERROR] 4:22-4:22: Can not find matching ')'\n"
+                                 "[ERROR] 4:24-4:24: Can not find matching ')'\n");
 
     de_bracket::print(ss, debracketed, 0);
     EXPECT_EQ(ss.str(), R"(
@@ -224,12 +223,12 @@ TEST(Parse, DeBracket_MissingClosingBrackets) {
 
 TEST(Parse, DeBracket_MissingOpenBrackets) {
     std::stringstream ss;
-    auto diags = std::vector<diag::Diagnostic>();
+    auto diags = diag::Diags();
     const char* const missing_open_b = "((\n"
-                                         "( (V) + 1*1 );\n"
-                                         "(V) := V) + 1*1;\n"
-                                         "( (V) )(Array) := (( V) )(0) ));\n"
-                                         "));\n";
+                                       "( (V) + 1*1 );\n"
+                                       "(V) := V) + 1*1;\n"
+                                       "( (V) )(Array) := (( V) )(0) ));\n"
+                                       "));\n";
 
     auto tokens = *lex(missing_open_b, diags);
     EXPECT_TRUE(diags.empty());
@@ -238,9 +237,9 @@ TEST(Parse, DeBracket_MissingOpenBrackets) {
     EXPECT_TRUE(diags.empty());
 
     auto debracketed = de_bracket::parse(std::move(de_double_bracketed), diags);
-    EXPECT_EQ(to_string(std::move(diags)), "[ERROR] 3:9-3:9: Can not find matching '('\n"
-                                           "[ERROR] 4:23-4:23: Can not find matching '('\n"
-                                           "[ERROR] 4:25-4:25: Can not find matching '('\n");
+    EXPECT_EQ(diags.to_string(), "[ERROR] 3:9-3:9: Can not find matching '('\n"
+                                 "[ERROR] 4:23-4:23: Can not find matching '('\n"
+                                 "[ERROR] 4:25-4:25: Can not find matching '('\n");
 
     de_bracket::print(ss, debracketed, 0);
     EXPECT_EQ(ss.str(), R"(
@@ -252,4 +251,71 @@ TEST(Parse, DeBracket_MissingOpenBrackets) {
     ))
 ))
 )");
+}
+
+namespace ast {
+    void print(std::ostream& ss, Node<Any>&& node, int indent) {
+        std::visit(
+            // NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
+            [&]<typename T>(T&& t) {
+                static_assert(std::is_same_v<T, std::decay_t<T>>);
+                if constexpr (std::is_same_v<T, Array>) {
+                    ss << "((\n";
+                    for (auto&& element : std::move(t.elements)) {
+                        print_indent(ss, indent + 1);
+                        print(ss, std::move(element), indent + 1);
+                        ss << '\n';
+                    }
+                    print_indent(ss, indent);
+                    ss << "))";
+                } else if constexpr (std::is_same_v<T, Assign>) {
+                    ss << "[";
+                    print(ss, convert_node<Index, Any>(std::move(t.lhs)), indent);
+                    ss << " := ";
+                    print(ss, std::move(t.rhs), indent);
+                    ss << "]";
+                } else if constexpr (std::is_same_v<T, Index>) {
+                    ss << "[";
+                    if (t.subject) {
+                        print(ss, convert_node_variants<Indexable, Any>(std::move(*t.subject)),
+                              indent);
+                    }
+                    ss << "( ";
+                    print(ss, std::move(t.index), indent);
+                    ss << " )]";
+                } else if constexpr (std::is_same_v<T, OperatorBinary>) {
+                    ss << "[";
+                    print(ss, std::move(t.lhs), indent);
+                    ss << " " << diag::to_string(t.kind) << " ";
+                    print(ss, std::move(t.rhs), indent);
+                    ss << "]";
+                } else if constexpr (std::is_same_v<T, OperatorUnary>) {
+                    ss << "[";
+                    ss << diag::to_string(t.kind) << " ";
+                    print(ss, std::move(t.rhs), indent);
+                    ss << "]";
+                } else if constexpr (std::is_same_v<T, Number>) {
+                    ss << diag::to_string(t.value);
+                } else {
+                    static_assert(false, "Non exhaustive");
+                }
+            },
+            std::move(*node.t));
+    }
+
+    void print(std::ostream& ss, Array&& node) {
+        ss << '\n';
+        for (auto&& element : node.elements) {
+            print(ss, std::move(element), 0);
+            ss << '\n';
+        }
+    }
+} // namespace ast
+
+TEST(Parse, Parse_HelloWorld) {
+    std::stringstream ss;
+    auto diags = diag::Diags();
+    auto ast = parse(sample_programs::HELLO_WORLD, diags);
+    ast::print(ss, std::move(*ast));
+    EXPECT_EQ(ss.str(), sample_programs::HELLO_WORLD_AST);
 }

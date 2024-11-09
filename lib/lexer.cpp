@@ -289,7 +289,7 @@ std::optional<std::vector<token::Token>> lex(std::string_view src_code, diag::Di
                 range.start = range.end;
             }
         } else {
-            diags.push_back(diag::Diagnostic{
+            diags.insert(diag::Diagnostic{
                 .level{diag::error}, .range{range}, .message{maybe_next_state.error()}});
             return std::nullopt;
         }

@@ -2,6 +2,7 @@
 #include "diagnostic.hpp"
 #include "lexer.hpp"
 #include "macros.hpp"
+#include <cstdio>
 #include <tl/expected.hpp>
 
 namespace de_double_bracket {
@@ -54,19 +55,18 @@ namespace de_double_bracket {
                                      diag::Range{.start{start_range.start}, .end{token.range.end}}},
                                  .t{Node{std::move(elements)}}});
                         } else {
-                            diags.push_back(
-                                diag::Diagnostic{.level{diag::error},
-                                                 .range{token.range},
-                                                 .message{R"(Can not find matching "((")"}});
+                            diags.insert(diag::Diagnostic{.level{diag::error},
+                                                          .range{token.range},
+                                                          .message{"Can not find matching '(('"}});
                             // Emit an diagnostics but continue as normal otherwise
                             fatal =
                                 true; // Make sure to return nullopt as bracket parsing has failed
                         }
                     } else if constexpr (std::is_same_v<T, token::Semicolon>) {
                         if (elements_stack.back().back().empty()) {
-                            diags.push_back(diag::Diagnostic{.level{diag::warning},
-                                                             .range{token.range},
-                                                             .message{"Extra ';' found"}});
+                            diags.insert(diag::Diagnostic{.level{diag::warning},
+                                                          .range{token.range},
+                                                          .message{"Extra ';' found"}});
                         } else {
                             elements_stack.back().emplace_back();
                         }
@@ -88,12 +88,9 @@ namespace de_double_bracket {
                 std::move(token.t));
         }
         if (!open_b_ranges.empty()) {
-            diags.reserve(open_b_ranges.size());
             for (const auto& range : open_b_ranges) {
-                diags.push_back(
-                    diag::Diagnostic{.level{diag::error},
-                                     .range{range},
-                                     .message{R"range(Can not find matching "))")range"}});
+                diags.insert(diag::Diagnostic{
+                    .level{diag::error}, .range{range}, .message{"Can not find matching '))'"}});
             }
             return std::nullopt;
         }
@@ -161,10 +158,9 @@ namespace de_bracket {
                                      diag::Range{.start{start_range.start}, .end{token.range.end}}},
                                  .t{SingleBracket{std::move(debracketed)}}});
                         } else {
-                            diags.push_back(
-                                diag::Diagnostic{.level{diag::error},
-                                                 .range{token.range},
-                                                 .message{"Can not find matching '('"}});
+                            diags.insert(diag::Diagnostic{.level{diag::error},
+                                                          .range{token.range},
+                                                          .message{"Can not find matching '('"}});
                             // Emit an diagnostics but continue as normal otherwise
                         }
                     } else if constexpr (std::is_same_v<T, token::Number> ||
@@ -183,9 +179,8 @@ namespace de_bracket {
                 std::move(token.t));
         }
         if (!open_b_ranges.empty()) {
-            diags.reserve(open_b_ranges.size());
             for (const auto& range : open_b_ranges) {
-                diags.push_back(diag::Diagnostic{
+                diags.insert(diag::Diagnostic{
                     .level{diag::error}, .range{range}, .message{"Can not find matching ')'"}});
             }
             // Ignore missing brackets after emitting diagnostics
@@ -212,25 +207,20 @@ namespace de_bracket {
 namespace ast {
     Array parse_double(de_bracket::DoubleBracket&& node, diag::Diags& diags);
     Node<Any> parse_any(std::vector<de_bracket::Debracketed>&& tokens, diag::Diags& diags);
+    Node<Any> parse_any(std::vector<de_bracket::Debracketed>::iterator& tokens_begin,
+                        std::vector<de_bracket::Debracketed>::iterator tokens_end,
+                        diag::Diags& diags);
 
-    Array parse_double(de_bracket::DoubleBracket&& node, diag::Diags& diags) {
-        auto elements = std::vector<Node<Any>>();
-        for (auto&& element : std::move(node.elements)) {
-            elements.push_back(parse_any(std::move(element), diags));
-        }
-        return Array{.elements{std::move(elements)}};
-    }
-
-    // lesser tighter
+    // greater tighter higher
     int get_precedence(number::op::Binary b) {
         switch (b) {
         case number::op::multiply:
         case number::op::divide:
         case number::op::remainder:
-            return 0;
+            return 4;
         case number::op::plus:
         case number::op::minus:
-            return 1;
+            return 3;
         case number::op::equal:
         case number::op::not_equal:
         case number::op::smaller:
@@ -240,62 +230,275 @@ namespace ast {
             return 2;
         case number::op::bool_and:
         case number::op::bool_or:
-            return 3;
+            return 1;
         }
     }
 
-    using IR = diag::WithInfo<std::variant< //
-        token::Assign,                      //
-        token::OperatorBinary,              //
-        token::OperatorUnary,               //
-        Array,                              //
-        Assign,                             //
-        Index,                              //
-        OperatorBinary,                     //
-        OperatorUnary,                      //
-        Number                              //
-        >>;
+    Array parse_double(de_bracket::DoubleBracket&& node, diag::Diags& diags) {
+        auto elements = std::vector<Node<Any>>();
+        for (auto&& element : std::move(node.elements)) {
+            elements.push_back(parse_any(std::move(element), diags));
+        }
+        return Array{.elements{std::move(elements)}};
+    }
 
-    std::vector<IR> parse_brackets_number(std::vector<de_bracket::Debracketed>&& tokens,
-                                          diag::Diags& diags) {
-        auto irs = std::vector<IR>();
-        for (auto&& token : std::move(tokens)) {
+    using IRBNA = diag::WithInfo<std::variant< //
+        token::OperatorBinary,                 //
+        token::OperatorUnary,                  //
+        Array,                                 //
+        Assign,                                //
+        Index,                                 //
+        Number                                 //
+        >>;
+    // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved)
+    std::vector<IRBNA>
+    parse_brackets_number_assign(std::vector<de_bracket::Debracketed>::iterator& token,
+                                 std::vector<de_bracket::Debracketed>::iterator tokens_end,
+                                 diag::Diags& diags) {
+        auto irs = std::vector<IRBNA>();
+        for (; token != tokens_end; token++) {
             std::visit(
                 [&]<typename T>(T&& t) {
+                    static_assert(std::is_same_v<T, std::decay_t<T>>);
                     if constexpr (std::is_same_v<T, de_bracket::DoubleBracket>) {
                         auto arr = parse_double(std::forward<T>(t), diags);
-                        irs.push_back({.range{token.range}, .t{std::move(arr)}});
+                        irs.push_back(IRBNA{.range{token->range}, .t{std::move(arr)}});
                     } else if constexpr (std::is_same_v<T, de_bracket::SingleBracket>) {
                         auto expr = parse_any(std::move(t.children), diags);
-                        auto last = std::make_optional<IR>();
-                        if (!irs.empty() && (std::holds_alternative<token::Array>(irs.back().t) ||
-                                             std::holds_alternative<token::Index>(irs.back().t) ||
-                                             std::holds_alternative<token::Index>(irs.back().t) ||
-                                             )) {
+                        auto last = std::optional<Node<Indexable>>();
+                        if (!irs.empty()) {
+                            if (std::holds_alternative<Array>(irs.back().t)) {
+                                last = {.range{irs.back().range},
+                                        .t{std::make_unique<Indexable>(
+                                            std::move(std::get<Array>(irs.back().t)))}};
+                            }
+                            if (std::holds_alternative<Index>(irs.back().t)) {
+                                last = {.range{irs.back().range},
+                                        .t{std::make_unique<Indexable>(
+                                            std::move(std::get<Index>(irs.back().t)))}};
+                            }
+                            if (std::holds_alternative<Number>(irs.back().t)) {
+                                last = {.range{irs.back().range},
+                                        .t{std::make_unique<Indexable>(
+                                            std::move(std::get<Number>(irs.back().t)))}};
+                            }
                         }
-                        auto index = Index {}
-                        irs.push_back({.range{token.range}, .t{std::move(expr)}})
+                        auto range = expr.range;
+                        if (last) {
+                            irs.pop_back();
+                            range.start = last->range.start;
+                        }
+                        auto index = Index{.subject{std::move(last)}, .index{std::move(expr)}};
+                        irs.push_back(IRBNA{.range{range}, .t{std::move(index)}});
                     } else if constexpr (std::is_same_v<T, token::Number>) {
+                        irs.push_back(
+                            IRBNA{.range{token->range}, .t{Number{.value{std::move(t.value)}}}});
                     } else if constexpr (std::is_same_v<T, token::Assign>) {
-                    } else if constexpr (std::is_same_v<T, token::OperatorBinary>) {
-                    } else if constexpr (std::is_same_v<T, token::OperatorUnary>) {
+                        if (!irs.empty() && std::holds_alternative<Index>(irs.back().t)) {
+                            auto lhs = std::get<Index>(std::move(irs.back().t));
+                            auto lhs_range = irs.back().range;
+                            irs.pop_back();
+                            token++;
+                            if (token != tokens_end) {
+                                auto rhs = parse_any(token, tokens_end, diags);
+                                irs.push_back(IRBNA{
+                                    .range{.start{lhs_range.start}, .end{rhs.range.end}},
+                                    .t{Assign{.lhs{.range{lhs_range},
+                                                   .t{std::make_unique<Index>(std::move(lhs))}},
+                                              .rhs{std::move(rhs)}}}});
+                            } else {
+                                diags.insert({.level{diag::error},
+                                              .range{(token - 1)->range},
+                                              .message{"Expected expression after ':='"}});
+                            }
+                        } else {
+                            diags.insert({.level{diag::error},
+                                          .range{token->range},
+                                          .message{"Unexpected ':='"}});
+                            token = tokens_end; // Stop parsing
+                        }
+                    } else if constexpr (std::is_same_v<T, token::OperatorBinary> ||
+                                         std::is_same_v<T, token::OperatorUnary>) {
+                        irs.push_back(IRBNA{.range{token->range}, .t{t}});
                     } else {
                         static_assert(false, "Non exhaustive");
                     }
                 },
-                std::move(token.t));
+                std::move(token->t));
+            if (token == tokens_end) {
+                // token was used during a function call in the loop
+                break;
+            }
         }
+        return irs;
     }
 
-    std::vector<IR> parse_unary(std::vector<IR>&& irs, diag::Diags& diags) {}
-    std::vector<IR> parse_binary(std::vector<IR>&& irs, diag::Diags& diags) {}
+    std::optional<Node<OperatorUnary>> parse_unary(std::vector<IRBNA>::iterator& ir,
+                                                   std::vector<IRBNA>::iterator irs_end,
+                                                   diag::Diags& diags) {
+        auto ops = std::vector<diag::WithInfo<number::op::Unary>>();
+        for (; ir != irs_end; ir++) {
+            auto node = std::optional<Node<Any>>();
+            auto early_return = std::visit(
+                [&]<typename T>(T&& t) -> bool {
+                    static_assert(std::is_same_v<T, std::decay_t<T>>);
+                    if constexpr (std::is_same_v<T, token::OperatorBinary>) {
+                        diags.insert({.level{diag::error},
+                                      .range{ir->range},
+                                      .message{std::format("Unexpected '{}' after unary operator",
+                                                           diag::to_string(t.kind))}});
+                        return true;
+                    } else if constexpr (std::is_same_v<T, token::OperatorUnary>) {
+                    } else if constexpr (std::is_same_v<T, Array> || std::is_same_v<T, Assign> ||
+                                         std::is_same_v<T, Index> || std::is_same_v<T, Number>) {
+                        node = Node<Any>{.range{ir->range},
+                                         .t{std::make_unique<Any>(std::forward<T>(t))}};
+                    } else {
+                        static_assert(false, "Non exhaustive");
+                    }
+                    return false;
+                },
+                std::move(ir->t));
+            if (early_return) {
+                return std::nullopt;
+            }
+            if (node) {
+                assert(!ops.empty());
+                auto op = Node<OperatorUnary>{
+                    .range{.start{ops.back().range.start}, .end{node->range.end}},
+                    .t{std::make_unique<OperatorUnary>(
+                        OperatorUnary{.kind{ops.back().t}, .rhs{std::move(*node)}})}};
+                ops.pop_back();
+                while (!ops.empty()) {
+                    op = Node<OperatorUnary>{
+                        .range{.start{ops.back().range.start}, .end{op.range.end}},
+                        .t{std::make_unique<OperatorUnary>(
+                            OperatorUnary{.kind{ops.back().t},
+                                          .rhs{convert_node<OperatorUnary, Any>(std::move(op))}})}};
+                }
+                return op;
+            }
+        }
+        return std::nullopt;
+    }
 
+    std::optional<Node<Any>> parse_ops(std::vector<IRBNA>&& irs, diag::Diags& diags) {
+        assert(!irs.empty());
+        auto operator_stack = std::vector<diag::WithInfo<number::op::Binary>>();
+        auto operands = std::vector<Node<Any>>();
+        auto pop_operator = [&]() {
+            auto op = operator_stack.back().t;
+            operator_stack.pop_back();
+            auto rhs = std::move(operands.back());
+            operands.pop_back();
+            auto lhs = std::move(operands.back());
+            operands.pop_back();
+            auto node = Node<Any>{.range{.start{lhs.range.start}, .end{rhs.range.end}},
+                                  .t{std::make_unique<Any>(OperatorBinary{
+                                      .kind{op}, .lhs{std::move(lhs)}, .rhs{std::move(rhs)}})}};
+            operands.push_back(std::move(node));
+        };
+        for (auto ir = irs.begin(); ir != irs.end(); ir++) {
+            auto operand = std::optional<Node<Any>>();
+            // NOLINTNEXTLINE(readability-identifier-naming)
+            auto operator_ = std::optional<diag::WithInfo<number::op::Binary>>();
+            auto early_return = std::visit(
+                [&]<typename T>(T&& t) -> bool {
+                    static_assert(std::is_same_v<T, std::decay_t<T>>);
+                    if constexpr (std::is_same_v<T, token::OperatorBinary>) {
+                        operator_ = std::make_optional<diag::WithInfo<number::op::Binary>>(
+                            {.range{ir->range}, .t{t.kind}});
+                    } else if constexpr (std::is_same_v<T, token::OperatorUnary>) {
+                        auto unary = parse_unary(ir, irs.end(), diags);
+                        if (unary) {
+                            operand = convert_node<OperatorUnary, Any>(std::move(*unary));
+                        } else {
+                            return true;
+                        }
+                    } else if constexpr (std::is_same_v<T, Array> || std::is_same_v<T, Assign> ||
+                                         std::is_same_v<T, Index> || std::is_same_v<T, Number>) {
+                        operand = Node<Any>{.range{ir->range},
+                                            .t{std::make_unique<Any>(std::forward<T>(t))}};
+                    } else {
+                        static_assert(false, "Non exhaustive");
+                    }
+                    return false;
+                },
+                std::move(ir->t));
+            if (early_return) {
+                return std::nullopt;
+            }
+            if (operand) {
+                assert(!operator_);
+                if (operator_stack.size() != operands.size()) {
+                    assert(operator_stack.size() + 1 == operands.size());
+                    diags.insert(diag::Diagnostic{.level{diag::error},
+                                                  .range{operand->range},
+                                                  .message{"Expected operator"}});
+                    return std::nullopt;
+                }
+                operands.push_back(std::move(*operand));
+            } else {
+                assert(operator_);
+                if (operator_stack.size() + 1 != operands.size()) {
+                    assert(operator_stack.size() == operands.size());
+                    diags.insert(diag::Diagnostic{
+                        .level{diag::error},
+                        .range{operator_->range},
+                        .message{std::format("Unexpected '{}'", diag::to_string(operator_->t))}});
+                    return std::nullopt;
+                }
+                while (!operator_stack.empty() &&
+                       get_precedence(operator_->t) <= get_precedence(operator_stack.back().t)) {
+                    pop_operator();
+                }
+                operator_stack.push_back(*operator_);
+            }
+        }
+        if (operator_stack.size() + 1 != operands.size()) {
+            assert(operator_stack.size() == operands.size());
+            diags.insert(
+                diag::Diagnostic{.level{diag::error},
+                                 .range{operator_stack.back().range},
+                                 .message{std::format("Unexpected '{}'",
+                                                      diag::to_string(operator_stack.back().t))}});
+            return std::nullopt;
+        }
+        while (!operator_stack.empty()) {
+            pop_operator();
+        }
+        assert(operands.size() == 1);
+        return std::move(operands.back());
+    }
+
+    // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved)
     Node<Any> parse_any(std::vector<de_bracket::Debracketed>&& tokens, diag::Diags& diags) {
-        auto output = std::vector<Node<Any>>();
+        auto begin = tokens.begin();
+        return parse_any(begin, tokens.end(), diags);
+    }
+
+    Node<Any> parse_any(std::vector<de_bracket::Debracketed>::iterator& tokens_begin,
+                        std::vector<de_bracket::Debracketed>::iterator tokens_end,
+                        diag::Diags& diags) {
+        assert(tokens_begin != tokens_end);
+        auto irbna = parse_brackets_number_assign(tokens_begin, tokens_end, diags);
+        auto any = parse_ops(std::move(irbna), diags);
+        if (any) {
+            return std::move(*any);
+        } else {
+            return Node<Any>{
+                .range{},
+                .t{std::make_unique<Any>(Number{.value{"Place_holder_to_continue_parsing"}})}};
+        }
     }
 } // namespace ast
 
-std::optional<ast::Array> parse(std::span<token::Token> tokens, diag::Diags& diags) {
+std::optional<ast::Array> parse(std::string_view src_code, diag::Diags& diags) {
+    auto lexed = lex(src_code, diags);
+    if (!lexed) {
+        return std::nullopt;
+    }
+    auto& tokens = lexed.value();
     auto d_nodes_i = de_double_bracket::parse(tokens, diags);
     if (!d_nodes_i) {
         return std::nullopt;

@@ -1,5 +1,4 @@
 #include "lib/lexer.hpp"
-#include <sstream>
 #include <string>
 
 namespace token {
@@ -17,26 +16,7 @@ namespace token {
         } else if constexpr (std::is_same_v<T, Comment>) {
             return std::format("#{}", t.content);
         } else if constexpr (std::is_same_v<T, Number>) {
-            auto letters = t.value.to_letters();
-            if (letters) {
-                return *letters;
-            }
-
-            std::stringstream ss{};
-            ss << "{";
-            const auto* space = "";
-            for (const auto& n : t.value.get_numerator()) {
-                ss << space << n;
-                space = " ";
-            }
-            ss << "}{";
-            space = "";
-            for (const auto& n : t.value.get_denominator()) {
-                ss << space << n;
-                space = " ";
-            }
-            ss << "}";
-            return ss.str();
+            return diag::to_string(t.value);
         } else if constexpr (std::is_same_v<T, Assign>) {
             return " := ";
         } else if constexpr (std::is_same_v<T, OperatorBinary>) {

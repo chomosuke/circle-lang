@@ -1,5 +1,6 @@
 #pragma once
 
+#include "number.hpp"
 #include <cstdint>
 #include <string>
 #include <tl/expected.hpp>
@@ -35,12 +36,35 @@ namespace diag {
 
         [[nodiscard]] std::string to_string() const;
     };
-    std::string to_string(std::vector<Diagnostic> ds);
 
-    using Diags = std::vector<diag::Diagnostic>;
+    class Diags {
+      private:
+        bool m_fatal{};
+        std::vector<Diagnostic> m_diags;
+
+      public:
+        Diags() = default;
+        void insert(Diagnostic&& diag);
+        [[nodiscard]] bool empty() const;
+        [[nodiscard]] bool has_fatal() const;
+        [[nodiscard]] std::string to_string();
+    };
+
+    std::string to_string(number::op::Binary op);
+    std::string to_string(number::op::Unary op);
+    std::string to_string(const number::Value& v);
 
     template <typename T> struct WithInfo {
         Range range;
         T t;
     };
+
+    template <typename T1, typename T2> WithInfo<T2> convert_with_info(WithInfo<T1>&& t) {
+        return convert_with_info<T1, T2>(std::move(t), [](T1&& t) { return std::move(t); });
+    }
+
+    template <typename T1, typename T2>
+    WithInfo<T2> convert_with_info(WithInfo<T1>&& t, std::function<T2(T1&&)> convertor) {
+        return {.range{t.range}, .t{convertor(std::move(t.t))}};
+    }
 } // namespace diag

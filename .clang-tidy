@@ -8,6 +8,7 @@ Checks: >
   cppcoreguidelines-*,
   -cppcoreguidelines-avoid-const-or-ref-data-members,
   -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-rvalue-reference-param-not-moved,
   hicpp-*,
   llvm-*,
   -llvm-else-after-return,

@@ -3,6 +3,7 @@ and `( I )` could possibily evaluate to `1`, things that are obviously illegal
 like `1( I )` (indexing a number) will be legal at parse time and will result in
 runtime error.
 
+#columns()[
 $
 &"S" &::= &"ArrayBody" \
 
@@ -37,7 +38,9 @@ $
 & & | & "Expr1 '<=' Expr2" \
 & & | & "Expr1 '>=' Expr2" \
 & & | & "Expr2" \
+$
 
+$
 &"Expr2" &::= &"Expr2 '+' Expr3" \
 & & | & "Expr2 '-' Expr3" \
 & & | & "Expr3" \
@@ -64,3 +67,4 @@ $
 & & | & "';' ArrayBody" \
 & & | & epsilon \
 $
+]
