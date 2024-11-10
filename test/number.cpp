@@ -45,19 +45,45 @@ TEST(Number, LexicographicallyMinimalRotationBF) {
     }
 }
 
-TEST(Number, ValueFromNumber) {}
+TEST(Number, PlusMinusMultiplyDivide) {
+    auto pi = number::Value(1);
+    EXPECT_EQ(pi.to_string(), "{0 1}{1}");
+
+    auto num = number::Value(1) * pi * pi;
+    EXPECT_EQ(num.to_string(), "{0 0 0 1}{1}");
+
+    num = number::Value(24) / pi;
+    EXPECT_EQ(num.to_string(), "{24}{1}");
+
+    num = number::Value(1) * pi * pi + number::Value(3) * pi - number::Value(10) -
+          number::Value(24) / pi;
+    EXPECT_EQ(num.to_string(), "{-24 -10 3 1}{1}");
+
+    auto den = number::Value(1) * pi * pi + number::Value(2) * pi - number::Value(1) -
+               number::Value(2) / pi;
+    EXPECT_EQ(den.to_string(), "{-2 -1 2 1}{1}");
+
+    num = num * number::Value(100);
+    EXPECT_EQ(num.to_string(), "{0 -2400 -1000 300 100}{1}");
+    den = den * number::Value(10) * pi;
+    EXPECT_EQ(den.to_string(), "{0 0 -20 -10 20 10}{1}");
+
+    EXPECT_EQ((num / den).to_string(), "{-240 -100 30 10}{0 -2 -1 2 1}");
+
+    EXPECT_EQ((pi * pi + pi - pi * pi).to_string(), "{0 1}{1}");
+}
 
 TEST(Number, ValueFromName) {
     auto n = number::Value("abcd");
-    EXPECT_EQ(n.get_numerator(), (std::vector<BigInt>{'a' * pow(number::LETTER_BASE, 0),
-                                                      'b' * pow(number::LETTER_BASE, 1),
-                                                      'c' * pow(number::LETTER_BASE, 2),
-                                                      'd' * pow(number::LETTER_BASE, 3)}));
+    EXPECT_EQ(n.get_numerator(), (std::vector<BigInt>{pow(number::LETTER_BASE, 0) * 'a',
+                                                      pow(number::LETTER_BASE, 1) * 'b',
+                                                      pow(number::LETTER_BASE, 2) * 'c',
+                                                      pow(number::LETTER_BASE, 3) * 'd'}));
     n = number::Value("bcda");
-    EXPECT_EQ(n.get_numerator(), (std::vector<BigInt>{'a' * pow(number::LETTER_BASE, 0),
-                                                      'b' * pow(number::LETTER_BASE, 1),
-                                                      'c' * pow(number::LETTER_BASE, 2),
-                                                      'd' * pow(number::LETTER_BASE, 3)}));
+    EXPECT_EQ(n.get_numerator(), (std::vector<BigInt>{pow(number::LETTER_BASE, 0) * 'a',
+                                                      pow(number::LETTER_BASE, 1) * 'b',
+                                                      pow(number::LETTER_BASE, 2) * 'c',
+                                                      pow(number::LETTER_BASE, 3) * 'd'}));
 
     EXPECT_EQ(n.to_letters(), "abcd");
 }

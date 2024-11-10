@@ -34,6 +34,7 @@ namespace number {
 
     class Value {
       private:
+        // Invariant: The fraction will always be simplified with simplify().
         std::vector<BigInt> m_numerator;
         std::vector<BigInt> m_denominator;
 
@@ -42,9 +43,26 @@ namespace number {
 
         explicit Value(std::string_view letters);
         explicit Value(const BigInt& number);
+        explicit Value(const std::vector<BigInt>& num, const std::vector<BigInt>& den);
 
         [[nodiscard]] const std::vector<BigInt>& get_numerator() const;
         [[nodiscard]] const std::vector<BigInt>& get_denominator() const;
         [[nodiscard]] std::optional<std::string> to_letters() const;
+        [[nodiscard]] std::string to_string() const;
     };
+
+    [[nodiscard]] Value operator+(const Value& lhs, const Value& rhs);
+    [[nodiscard]] Value operator-(const Value& lhs, const Value& rhs);
+    [[nodiscard]] Value operator*(const Value& lhs, const Value& rhs);
+    [[nodiscard]] Value operator/(const Value& lhs, const Value& rhs);
+    [[nodiscard]] Value operator%(const Value& lhs, const Value& rhs);
+    [[nodiscard]] Value operator&&(const Value& lhs, const Value& rhs);
+    [[nodiscard]] Value operator||(const Value& lhs, const Value& rhs);
+    [[nodiscard]] Value operator==(const Value& lhs, const Value& rhs);
+    [[nodiscard]] Value operator!=(const Value& lhs, const Value& rhs);
+    [[nodiscard]] Value operator<(const Value& lhs, const Value& rhs);
+    [[nodiscard]] Value operator<=(const Value& lhs, const Value& rhs);
+    [[nodiscard]] Value operator>(const Value& lhs, const Value& rhs);
+    [[nodiscard]] Value operator>=(const Value& lhs, const Value& rhs);
+    [[nodiscard]] Value operator!(const Value& lhs);
 } // namespace number

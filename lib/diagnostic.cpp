@@ -93,21 +93,7 @@ namespace diag {
             return *letters;
         }
 
-        std::stringstream ss{};
-        ss << "{";
-        const auto* space = "";
-        for (const auto& n : v.get_numerator()) {
-            ss << space << n;
-            space = " ";
-        }
-        ss << "}{";
-        space = "";
-        for (const auto& n : v.get_denominator()) {
-            ss << space << n;
-            space = " ";
-        }
-        ss << "}";
-        return ss.str();
+        return v.to_string();
     }
 
     std::string Range::to_string() const {

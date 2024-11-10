@@ -104,7 +104,7 @@ TEST(Parse, DeDoubleBracket_ExtraSemi) {
     ( ( V ) + {0 1}{1} * {0 1}{1} )
     ( V ) := ( V ) + {0 1}{1} * {0 1}{1}
     ( ( V ) )( Array ) := ((
-        ( ( V ) )( {0 0}{1} )
+        ( ( V ) )( {}{1} )
     ))
 ))
 )");
@@ -215,7 +215,7 @@ TEST(Parse, DeBracket_MissingClosingBrackets) {
     ( ( V ) + {0 1}{1} * {0 1}{1} )
     ( V ) := V + {0 1}{1} * {0 1}{1}
     ( ( V ) )( Array ) := ((
-        V( {0 0}{1} )
+        V( {}{1} )
     ))
 ))
 )");
@@ -247,7 +247,7 @@ TEST(Parse, DeBracket_MissingOpenBrackets) {
     ( ( V ) + {0 1}{1} * {0 1}{1} )
     ( V ) := V + {0 1}{1} * {0 1}{1}
     ( ( V ) )( Array ) := ((
-        V( {0 0}{1} )
+        V( {}{1} )
     ))
 ))
 )");
