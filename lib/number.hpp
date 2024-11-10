@@ -12,7 +12,6 @@ namespace number {
             minus,
             multiply,
             divide,
-            remainder,
             bool_and,
             bool_or,
             equal,
@@ -55,7 +54,6 @@ namespace number {
     [[nodiscard]] Value operator-(const Value& lhs, const Value& rhs);
     [[nodiscard]] Value operator*(const Value& lhs, const Value& rhs);
     [[nodiscard]] Value operator/(const Value& lhs, const Value& rhs);
-    [[nodiscard]] Value operator%(const Value& lhs, const Value& rhs);
     [[nodiscard]] Value operator&&(const Value& lhs, const Value& rhs);
     [[nodiscard]] Value operator||(const Value& lhs, const Value& rhs);
     [[nodiscard]] Value operator==(const Value& lhs, const Value& rhs);

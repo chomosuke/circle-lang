@@ -216,7 +216,6 @@ namespace ast {
         switch (b) {
         case number::op::multiply:
         case number::op::divide:
-        case number::op::remainder:
             return 4;
         case number::op::plus:
         case number::op::minus:

@@ -229,10 +229,6 @@ namespace partial {
             if (content == "/") {
                 return state_with_new_partial(c, token::OperatorBinary{.kind{number::op::divide}});
             }
-            if (content == "%") {
-                return state_with_new_partial(c,
-                                              token::OperatorBinary{.kind{number::op::remainder}});
-            }
             if (content == "&&") {
                 return state_with_new_partial(c,
                                               token::OperatorBinary{.kind{number::op::bool_and}});

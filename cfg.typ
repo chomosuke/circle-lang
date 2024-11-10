@@ -20,7 +20,6 @@ $
 & & | & "Expr0 '-' Assign" \
 & & | & "Expr0 '*' Assign" \
 & & | & "Expr0 '/' Assign" \
-& & | & "Expr0 '%' Assign" \
 & & | & "Expr0 '+' Assign" \
 & & | & "'!' Assign" \
 & & | & "Assign" \
@@ -47,7 +46,6 @@ $
 
 &"Expr3" &::= &"Expr3 '*' Expr4" \
 & & | & "Expr3 '/' Expr4" \
-& & | & "Expr3 '%' Expr4" \
 & & | & "Expr4" \
 
 &"Expr4" &::= &"'!' Expr4" \

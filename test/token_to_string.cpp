@@ -29,8 +29,6 @@ namespace token {
                 return " * ";
             case number::op::divide:
                 return " / ";
-            case number::op::remainder:
-                return " % ";
             case number::op::bool_and:
                 return " && ";
             case number::op::bool_or:

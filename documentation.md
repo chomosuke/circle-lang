@@ -37,12 +37,12 @@ way:
     - Note that if `<lvalue> := <rvalue>` is in a sub-expression, it will
       evaluate to itself.
     - `:=` is right associative and have the lowest precedence.
-- There are operators: `+` `-` `*` `/` `%` `&&` `||` `=` `!=` `<` `>` `<=` `>=`
+- There are operators: `+` `-` `*` `/` `&&` `||` `=` `!=` `<` `>` `<=` `>=`
   `!`.
   - They do exactly what you'd expect.
   - Precedence:
     - `!`
-    - `*` `/` `%`
+    - `*` `/`
     - `+` `-`
     - `=` `!=` `<` `>` `<=` `>=`
     - `&&` `||`
