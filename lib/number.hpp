@@ -3,6 +3,7 @@
 #include "macros.hpp"
 #include "vendor/BigInt.hpp"
 #include <string_view>
+#include <tl/expected.hpp>
 #include <vector>
 
 namespace number {
@@ -48,6 +49,7 @@ namespace number {
         [[nodiscard]] const std::vector<BigInt>& get_denominator() const;
         [[nodiscard]] std::optional<std::string> to_letters() const;
         [[nodiscard]] std::string to_string() const;
+        [[nodiscard]] bool to_bool() const;
     };
 
     [[nodiscard]] Value operator+(const Value& lhs, const Value& rhs);
@@ -58,9 +60,9 @@ namespace number {
     [[nodiscard]] Value operator||(const Value& lhs, const Value& rhs);
     [[nodiscard]] Value operator==(const Value& lhs, const Value& rhs);
     [[nodiscard]] Value operator!=(const Value& lhs, const Value& rhs);
-    [[nodiscard]] Value operator<(const Value& lhs, const Value& rhs);
-    [[nodiscard]] Value operator<=(const Value& lhs, const Value& rhs);
-    [[nodiscard]] Value operator>(const Value& lhs, const Value& rhs);
-    [[nodiscard]] Value operator>=(const Value& lhs, const Value& rhs);
-    [[nodiscard]] Value operator!(const Value& lhs);
+    [[nodiscard]] tl::expected<Value, std::string> operator<(const Value& lhs, const Value& rhs);
+    [[nodiscard]] tl::expected<Value, std::string> operator<=(const Value& lhs, const Value& rhs);
+    [[nodiscard]] tl::expected<Value, std::string> operator>(const Value& lhs, const Value& rhs);
+    [[nodiscard]] tl::expected<Value, std::string> operator>=(const Value& lhs, const Value& rhs);
+    [[nodiscard]] tl::expected<Value, std::string> operator!(const Value& lhs);
 } // namespace number

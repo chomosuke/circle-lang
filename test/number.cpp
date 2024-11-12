@@ -45,6 +45,21 @@ TEST(Number, LexicographicallyMinimalRotationBF) {
     }
 }
 
+TEST(Number, ValueFromName) {
+    auto n = number::Value("abcd");
+    EXPECT_EQ(n.get_numerator(), (std::vector<BigInt>{pow(number::LETTER_BASE, 0) * 'a',
+                                                      pow(number::LETTER_BASE, 1) * 'b',
+                                                      pow(number::LETTER_BASE, 2) * 'c',
+                                                      pow(number::LETTER_BASE, 3) * 'd'}));
+    n = number::Value("bcda");
+    EXPECT_EQ(n.get_numerator(), (std::vector<BigInt>{pow(number::LETTER_BASE, 0) * 'a',
+                                                      pow(number::LETTER_BASE, 1) * 'b',
+                                                      pow(number::LETTER_BASE, 2) * 'c',
+                                                      pow(number::LETTER_BASE, 3) * 'd'}));
+
+    EXPECT_EQ(n.to_letters(), "abcd");
+}
+
 TEST(Number, PlusMinusMultiplyDivide) {
     auto pi = number::Value(1);
     EXPECT_EQ(pi.to_string(), "{0 1}{1}");
@@ -55,8 +70,8 @@ TEST(Number, PlusMinusMultiplyDivide) {
     num = number::Value(24) / pi;
     EXPECT_EQ(num.to_string(), "{24}{1}");
 
-    num = number::Value(1) * pi * pi + number::Value(3) * pi - number::Value(10) -
-          number::Value(24) / pi;
+    num = (number::Value(1) + number::Value(2) / pi) * (number::Value(1) - number::Value(3) / pi) *
+          (number::Value(1) + number::Value(4) / pi);
     EXPECT_EQ(num.to_string(), "{-24 -10 3 1}{1}");
 
     auto den = number::Value(1) * pi * pi + number::Value(2) * pi - number::Value(1) -
@@ -73,17 +88,37 @@ TEST(Number, PlusMinusMultiplyDivide) {
     EXPECT_EQ((pi * pi + pi - pi * pi).to_string(), "{0 1}{1}");
 }
 
-TEST(Number, ValueFromName) {
-    auto n = number::Value("abcd");
-    EXPECT_EQ(n.get_numerator(), (std::vector<BigInt>{pow(number::LETTER_BASE, 0) * 'a',
-                                                      pow(number::LETTER_BASE, 1) * 'b',
-                                                      pow(number::LETTER_BASE, 2) * 'c',
-                                                      pow(number::LETTER_BASE, 3) * 'd'}));
-    n = number::Value("bcda");
-    EXPECT_EQ(n.get_numerator(), (std::vector<BigInt>{pow(number::LETTER_BASE, 0) * 'a',
-                                                      pow(number::LETTER_BASE, 1) * 'b',
-                                                      pow(number::LETTER_BASE, 2) * 'c',
-                                                      pow(number::LETTER_BASE, 3) * 'd'}));
+TEST(Number, Bool) {
+    // NOLINTBEGIN(misc-redundant-expression)
+    auto pi = number::Value(1);
+    auto num = pi / pi;
+    for (auto i = 1; i <= 12; i++) {
+        num = num * (pi - number::Value(i) / pi);
+    }
 
-    EXPECT_EQ(n.to_letters(), "abcd");
+    auto f = pi / pi;
+    for (auto i = 13; i <= 16; i++) {
+        f = f * (pi - number::Value(i) / pi);
+    }
+
+    auto num2 = num * f / f;
+    EXPECT_TRUE((num == num2).to_bool());
+    EXPECT_FALSE((num != num2).to_bool());
+    EXPECT_FALSE((num > num2)->to_bool());
+    EXPECT_TRUE((num >= num2)->to_bool());
+    EXPECT_FALSE((num < num2)->to_bool());
+    EXPECT_TRUE((num <= num2)->to_bool());
+
+    auto num3 = num2 + pi / pi;
+    EXPECT_TRUE((num3 > num)->to_bool());
+    EXPECT_FALSE((num > num3)->to_bool());
+    EXPECT_TRUE((num3 >= num)->to_bool());
+    EXPECT_FALSE((num >= num3)->to_bool());
+    EXPECT_TRUE((num < num3)->to_bool());
+    EXPECT_FALSE((num3 < num)->to_bool());
+    EXPECT_TRUE((num <= num3)->to_bool());
+    EXPECT_FALSE((num3 <= num)->to_bool());
+    EXPECT_TRUE((num3 != num).to_bool());
+    EXPECT_FALSE((num3 == num).to_bool());
+    // NOLINTEND(misc-redundant-expression)
 }

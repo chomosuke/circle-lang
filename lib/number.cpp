@@ -1,9 +1,12 @@
 #include "number.hpp"
+#include "lib/pi.hpp"
 #include "vendor/BigInt.hpp"
+#include <cassert>
 #include <climits>
 #include <iterator>
 #include <sstream>
 #include <string_view>
+#include <tl/expected.hpp>
 #include <vector>
 
 namespace number {
@@ -211,6 +214,8 @@ namespace number {
         return ss.str();
     }
 
+    bool Value::to_bool() const { return !get_numerator().empty(); }
+
     std::vector<BigInt> multiply(const std::vector<BigInt>& x, const std::vector<BigInt>& y) {
         if (x.empty() || y.empty()) {
             return {};
@@ -271,21 +276,153 @@ namespace number {
         return Value(num, den);
     }
 
-    Value operator&&(const Value& lhs, const Value& rhs) {}
+    Value from_bool(bool b) {
+        if (b) {
+            return Value{{0, 1}, {1}};
+        } else {
+            return Value{{}, {1}};
+        }
+    }
 
-    Value operator||(const Value& lhs, const Value& rhs) {}
+    Value operator&&(const Value& lhs, const Value& rhs) {
+        return from_bool(lhs.to_bool() && rhs.to_bool());
+    }
 
-    Value operator==(const Value& lhs, const Value& rhs) {}
+    Value operator||(const Value& lhs, const Value& rhs) {
+        return from_bool(lhs.to_bool() || rhs.to_bool());
+    }
 
-    Value operator!=(const Value& lhs, const Value& rhs) {}
+    bool equal(const Value& lhs, const Value& rhs) {
+        auto lhs_n = number::multiply(lhs.get_numerator(), rhs.get_denominator());
+        auto rhs_n = number::multiply(rhs.get_numerator(), lhs.get_denominator());
 
-    Value operator<(const Value& lhs, const Value& rhs) {}
+        auto degree = std::max(lhs_n.size(), rhs_n.size());
 
-    Value operator<=(const Value& lhs, const Value& rhs) {}
+        for (auto i = 1; i <= degree; i++) {
+            auto lhs = BigInt(0);
+            if (i < lhs_n.size()) {
+                lhs = lhs_n[i];
+            }
+            auto rhs = BigInt(0);
+            if (i < rhs_n.size()) {
+                rhs = rhs_n[i];
+            }
+            if (rhs != lhs) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-    Value operator>(const Value& lhs, const Value& rhs) {}
+    Value operator==(const Value& lhs, const Value& rhs) { return from_bool(equal(lhs, rhs)); }
 
-    Value operator>=(const Value& lhs, const Value& rhs) {}
+    Value operator!=(const Value& lhs, const Value& rhs) { return from_bool(!equal(lhs, rhs)); }
 
-    Value operator!(const Value& lhs) {}
+    BigInt evaluate(const std::vector<BigInt>& v, int sf) {
+        assert(sf > 0 && sf <= PI_DIGITS);
+        auto result = BigInt(0);
+        auto pi = BigInt(std::string(PI, PI + sf));
+        auto ten = big_pow10(sf);
+        auto acc = ten;
+        if (!v.empty()) {
+            result += v[0] * acc;
+        }
+        for (auto i = 1; i < v.size(); i++) {
+            acc *= pi;
+            acc /= ten;
+            result += v[i] * acc;
+        }
+        return result;
+    }
+
+    std::optional<bool> less_than(const Value& lhs, const Value& rhs, int sf) {
+        auto lhs_n = evaluate(lhs.get_numerator(), sf);
+        auto lhs_d = evaluate(lhs.get_denominator(), sf);
+        if (lhs_d < 0) {
+            lhs_n = -lhs_n;
+            lhs_d = -lhs_d;
+        }
+        auto rhs_n = evaluate(rhs.get_numerator(), sf);
+        auto rhs_d = evaluate(rhs.get_denominator(), sf);
+        if (rhs_d < 0) {
+            rhs_n = -rhs_n;
+            rhs_d = -rhs_d;
+        }
+        if (lhs_n * rhs_d < rhs_n * lhs_d) {
+            return true;
+        }
+        if (lhs_n * rhs_d > rhs_n * lhs_d) {
+            return false;
+        }
+        return std::nullopt;
+    }
+
+    std::optional<bool> less_than(const Value& lhs, const Value& rhs) {
+        if (equal(lhs, rhs)) {
+            return false;
+        }
+        auto sf = 64;
+        // NOLINTBEGIN(cppcoreguidelines-narrowing-conversions, bugprone-narrowing-conversions)
+        auto max_degree = std::max<int>(lhs.get_numerator().size(), lhs.get_denominator().size());
+        max_degree = std::max<int>(max_degree, rhs.get_numerator().size());
+        max_degree = std::max<int>(max_degree, rhs.get_denominator().size());
+        // NOLINTEND(cppcoreguidelines-narrowing-conversions, bugprone-narrowing-conversions)
+        max_degree--;
+        while (sf <= PI_DIGITS) {
+            auto lt = less_than(lhs, rhs, sf);
+            if (lt) {
+                return lt;
+            }
+            sf *= 4;
+        }
+        return std::nullopt;
+    }
+
+    tl::expected<Value, std::string> operator<(const Value& lhs, const Value& rhs) {
+        auto lt = less_than(lhs, rhs);
+        if (lt) {
+            return from_bool(*lt);
+        } else {
+            return tl::unexpected(std::format("Not enough pi digits to figure out which if {} < {}",
+                                              lhs.to_string(), rhs.to_string()));
+        }
+    }
+
+    tl::expected<Value, std::string> operator>=(const Value& lhs, const Value& rhs) {
+        auto lt = less_than(lhs, rhs);
+        if (lt) {
+            return from_bool(!*lt);
+        } else {
+            return tl::unexpected(
+                std::format("Not enough pi digits to figure out which if {} >= {}", lhs.to_string(),
+                            rhs.to_string()));
+        }
+    }
+
+    tl::expected<Value, std::string> operator>(const Value& lhs, const Value& rhs) {
+        // NOLINTNEXTLINE(readability-suspicious-call-argument)
+        auto lt = less_than(rhs, lhs);
+        if (lt) {
+            return from_bool(*lt);
+        } else {
+            return tl::unexpected(std::format("Not enough pi digits to figure out which if {} > {}",
+                                              lhs.to_string(), rhs.to_string()));
+        }
+    }
+
+    tl::expected<Value, std::string> operator<=(const Value& lhs, const Value& rhs) {
+        // NOLINTNEXTLINE(readability-suspicious-call-argument)
+        auto lt = less_than(rhs, lhs);
+        if (lt) {
+            return from_bool(!*lt);
+        } else {
+            return tl::unexpected(
+                std::format("Not enough pi digits to figure out which if {} <= {}", lhs.to_string(),
+                            rhs.to_string()));
+        }
+    }
+
+    tl::expected<Value, std::string> operator!(const Value& lhs) {
+        return from_bool(!lhs.to_bool());
+    }
 } // namespace number
