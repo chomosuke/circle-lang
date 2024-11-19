@@ -120,5 +120,10 @@ TEST(Number, Bool) {
     EXPECT_FALSE((num3 <= num)->to_bool());
     EXPECT_TRUE((num3 != num).to_bool());
     EXPECT_FALSE((num3 == num).to_bool());
+
+    auto bignum = 10000000000;
+    auto num4 = number::Value(bignum) * pi;
+    auto num5 = number::Value(static_cast<long>(static_cast<double>(bignum) * std::numbers::pi));
+    EXPECT_TRUE((num4 > num5)->to_bool());
     // NOLINTEND(misc-redundant-expression)
 }

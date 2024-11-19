@@ -322,7 +322,7 @@ namespace number {
         assert(sf > 0 && sf <= PI_DIGITS);
         auto result = BigInt(0);
         auto pi = BigInt(std::string(PI, PI + sf));
-        auto ten = big_pow10(sf);
+        auto ten = big_pow10(sf - 1);
         auto acc = ten;
         if (!v.empty()) {
             result += v[0] * acc;
