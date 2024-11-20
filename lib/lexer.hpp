@@ -51,4 +51,4 @@ namespace token {
     using Token = diag::WithInfo<Kind>;
 } // namespace token
 
-std::optional<std::vector<token::Token>> lex(std::string_view src_code, diag::Diags &diags);
+std::optional<std::vector<token::Token>> lex(std::string_view src_code, diag::Diags& diags);

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <variant>
 template <class... Args> struct VariantCastProxy {
     std::variant<Args...> v;

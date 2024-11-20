@@ -25,7 +25,6 @@ namespace number {
         enum Unary : std::uint8_t {
             bool_not,
         };
-
     } // namespace op
 
     bool is_in_char_set(char c);
@@ -44,6 +43,7 @@ namespace number {
         explicit Value(std::string_view letters);
         explicit Value(const BigInt& number);
         explicit Value(const std::vector<BigInt>& num, const std::vector<BigInt>& den);
+        [[nodiscard]] Value clone() const;
 
         [[nodiscard]] const std::vector<BigInt>& get_numerator() const;
         [[nodiscard]] const std::vector<BigInt>& get_denominator() const;
@@ -60,9 +60,28 @@ namespace number {
     [[nodiscard]] Value operator||(const Value& lhs, const Value& rhs);
     [[nodiscard]] Value operator==(const Value& lhs, const Value& rhs);
     [[nodiscard]] Value operator!=(const Value& lhs, const Value& rhs);
-    [[nodiscard]] tl::expected<Value, std::string> operator<(const Value& lhs, const Value& rhs);
-    [[nodiscard]] tl::expected<Value, std::string> operator<=(const Value& lhs, const Value& rhs);
-    [[nodiscard]] tl::expected<Value, std::string> operator>(const Value& lhs, const Value& rhs);
-    [[nodiscard]] tl::expected<Value, std::string> operator>=(const Value& lhs, const Value& rhs);
-    [[nodiscard]] tl::expected<Value, std::string> operator!(const Value& lhs);
+    [[nodiscard]] Value operator<(const Value& lhs, const Value& rhs);
+    [[nodiscard]] Value operator<=(const Value& lhs, const Value& rhs);
+    [[nodiscard]] Value operator>(const Value& lhs, const Value& rhs);
+    [[nodiscard]] Value operator>=(const Value& lhs, const Value& rhs);
+    [[nodiscard]] Value operator!(const Value& lhs);
+
+    class Index {
+        // An index of a circular array
+      private:
+        Value m_value;
+        int m_length;
+        std::size_t m_hash;
+
+      public:
+        Index(Value&& value, int length);
+        [[nodiscard]] Index clone() const;
+
+        bool operator==(const Index& rhs) const;
+        [[nodiscard]] std::size_t hash() const;
+    };
 } // namespace number
+
+template <> struct std::hash<number::Index> {
+    std::size_t operator()(const number::Index& i) const noexcept;
+};

@@ -1,8 +1,12 @@
 #include "number.hpp"
-#include "lib/pi.hpp"
+
+#include "macros.hpp"
+#include "pi.hpp"
+
 #include "vendor/BigInt.hpp"
 #include <cassert>
 #include <climits>
+#include <cmath>
 #include <iterator>
 #include <sstream>
 #include <string_view>
@@ -176,6 +180,13 @@ namespace number {
         m_denominator = std::move(num_den.second);
     }
 
+    Value Value::clone() const {
+        auto v = Value(BigInt(0));
+        v.m_numerator = m_numerator;
+        v.m_denominator = m_denominator;
+        return v;
+    }
+
     const std::vector<BigInt>& Value::get_numerator() const { return m_numerator; }
 
     const std::vector<BigInt>& Value::get_denominator() const { return m_denominator; }
@@ -216,14 +227,27 @@ namespace number {
 
     bool Value::to_bool() const { return !get_numerator().empty(); }
 
-    std::vector<BigInt> multiply(const std::vector<BigInt>& x, const std::vector<BigInt>& y) {
-        if (x.empty() || y.empty()) {
+    std::vector<BigInt> operator*(const std::vector<BigInt>& lhs, const std::vector<BigInt>& rhs) {
+        if (lhs.empty() || rhs.empty()) {
             return {};
         }
-        auto result = std::vector<BigInt>(x.size() + y.size() - 1, 0);
-        for (auto i = 0; i < x.size(); i++) {
-            for (auto j = 0; j < y.size(); j++) {
-                result[i + j] += x[i] * y[j];
+        auto result = std::vector<BigInt>(lhs.size() + rhs.size() - 1, 0);
+        for (auto i = 0; i < lhs.size(); i++) {
+            for (auto j = 0; j < rhs.size(); j++) {
+                result[i + j] += lhs[i] * rhs[j];
+            }
+        }
+        return result;
+    }
+
+    std::vector<BigInt> operator-(const std::vector<BigInt>& lhs, const std::vector<BigInt>& rhs) {
+        auto result = std::vector<BigInt>(std::max(lhs.size(), rhs.size()), 0);
+        for (auto i = 0; i < result.size(); i++) {
+            if (i < lhs.size()) {
+                result[i] += lhs[i];
+            }
+            if (i < rhs.size()) {
+                result[i] -= rhs[i];
             }
         }
         return result;
@@ -249,30 +273,30 @@ namespace number {
     }
 
     Value operator+(const Value& lhs, const Value& rhs) {
-        auto lhs_n = number::multiply(lhs.get_numerator(), rhs.get_denominator());
-        auto rhs_n = number::multiply(rhs.get_numerator(), lhs.get_denominator());
-        auto den = number::multiply(rhs.get_denominator(), lhs.get_denominator());
+        auto lhs_n = lhs.get_numerator() * rhs.get_denominator();
+        auto rhs_n = rhs.get_numerator() * lhs.get_denominator();
+        auto den = rhs.get_denominator() * lhs.get_denominator();
         auto num = number::plus(lhs_n, rhs_n, true);
         return Value(num, den);
     }
 
     Value operator-(const Value& lhs, const Value& rhs) {
-        auto lhs_n = number::multiply(lhs.get_numerator(), rhs.get_denominator());
-        auto rhs_n = number::multiply(rhs.get_numerator(), lhs.get_denominator());
-        auto den = number::multiply(rhs.get_denominator(), lhs.get_denominator());
+        auto lhs_n = lhs.get_numerator() * rhs.get_denominator();
+        auto rhs_n = rhs.get_numerator() * lhs.get_denominator();
+        auto den = rhs.get_denominator() * lhs.get_denominator();
         auto num = number::plus(lhs_n, rhs_n, false);
         return Value(num, den);
     }
 
     Value operator*(const Value& lhs, const Value& rhs) {
-        auto num = number::multiply(lhs.get_numerator(), rhs.get_numerator());
-        auto den = number::multiply(lhs.get_denominator(), rhs.get_denominator());
+        auto num = lhs.get_numerator() * rhs.get_numerator();
+        auto den = lhs.get_denominator() * rhs.get_denominator();
         return Value(num, den);
     }
 
     Value operator/(const Value& lhs, const Value& rhs) {
-        auto num = number::multiply(lhs.get_numerator(), rhs.get_denominator());
-        auto den = number::multiply(lhs.get_denominator(), rhs.get_numerator());
+        auto num = lhs.get_numerator() * rhs.get_denominator();
+        auto den = lhs.get_denominator() * rhs.get_numerator();
         return Value(num, den);
     }
 
@@ -293,8 +317,8 @@ namespace number {
     }
 
     bool equal(const Value& lhs, const Value& rhs) {
-        auto lhs_n = number::multiply(lhs.get_numerator(), rhs.get_denominator());
-        auto rhs_n = number::multiply(rhs.get_numerator(), lhs.get_denominator());
+        auto lhs_n = lhs.get_numerator() * rhs.get_denominator();
+        auto rhs_n = rhs.get_numerator() * lhs.get_denominator();
 
         auto degree = std::max(lhs_n.size(), rhs_n.size());
 
@@ -357,7 +381,7 @@ namespace number {
         return std::nullopt;
     }
 
-    std::optional<bool> less_than(const Value& lhs, const Value& rhs) {
+    bool less_than(const Value& lhs, const Value& rhs) {
         if (equal(lhs, rhs)) {
             return false;
         }
@@ -371,58 +395,122 @@ namespace number {
         while (sf <= PI_DIGITS) {
             auto lt = less_than(lhs, rhs, sf);
             if (lt) {
-                return lt;
+                return *lt;
             }
-            sf *= 4;
+            sf += std::floor(std::log2(PI_DIGITS) - std::log2(sf) + 1);
         }
-        return std::nullopt;
+        std::cout << "Not enough pi digits to figure out which if " << lhs.to_string() << " < "
+                  << rhs.to_string() << '\n';
+        return false;
     }
 
-    tl::expected<Value, std::string> operator<(const Value& lhs, const Value& rhs) {
+    Value operator<(const Value& lhs, const Value& rhs) {
         auto lt = less_than(lhs, rhs);
-        if (lt) {
-            return from_bool(*lt);
-        } else {
-            return tl::unexpected(std::format("Not enough pi digits to figure out which if {} < {}",
-                                              lhs.to_string(), rhs.to_string()));
-        }
+        return from_bool(lt);
     }
 
-    tl::expected<Value, std::string> operator>=(const Value& lhs, const Value& rhs) {
+    Value operator>=(const Value& lhs, const Value& rhs) {
         auto lt = less_than(lhs, rhs);
-        if (lt) {
-            return from_bool(!*lt);
-        } else {
-            return tl::unexpected(
-                std::format("Not enough pi digits to figure out which if {} >= {}", lhs.to_string(),
-                            rhs.to_string()));
-        }
+        return from_bool(!lt);
     }
 
-    tl::expected<Value, std::string> operator>(const Value& lhs, const Value& rhs) {
+    Value operator>(const Value& lhs, const Value& rhs) {
         // NOLINTNEXTLINE(readability-suspicious-call-argument)
         auto lt = less_than(rhs, lhs);
-        if (lt) {
-            return from_bool(*lt);
-        } else {
-            return tl::unexpected(std::format("Not enough pi digits to figure out which if {} > {}",
-                                              lhs.to_string(), rhs.to_string()));
-        }
+        return from_bool(lt);
     }
 
-    tl::expected<Value, std::string> operator<=(const Value& lhs, const Value& rhs) {
+    Value operator<=(const Value& lhs, const Value& rhs) {
         // NOLINTNEXTLINE(readability-suspicious-call-argument)
         auto lt = less_than(rhs, lhs);
-        if (lt) {
-            return from_bool(!*lt);
-        } else {
-            return tl::unexpected(
-                std::format("Not enough pi digits to figure out which if {} <= {}", lhs.to_string(),
-                            rhs.to_string()));
-        }
+        return from_bool(!lt);
     }
 
-    tl::expected<Value, std::string> operator!(const Value& lhs) {
-        return from_bool(!lhs.to_bool());
+    Value operator!(const Value& lhs) { return from_bool(!lhs.to_bool()); }
+
+    BigInt substitute(const std::vector<BigInt>& v, const BigInt& pi) {
+        auto result = BigInt(0);
+        auto acc = BigInt(1);
+        if (!v.empty()) {
+            result += v[0] * acc;
+        }
+        for (auto i = 1; i < v.size(); i++) {
+            acc *= pi;
+            result += v[i] * acc;
+        }
+        return result;
+    }
+
+    std::size_t hash(const Value& value) {
+        auto pi = 314159;
+        auto num = substitute(value.get_numerator(), pi);
+        auto den = substitute(value.get_denominator(), pi);
+        auto g = gcd(num, den);
+        num /= g;
+        den /= g;
+        if (den < 0) {
+            num = -num;
+            den = -den;
+        }
+        num %= den * pi;
+        auto hasher = std::hash<std::string>();
+        return hasher(num.to_string()) ^ hasher(den.to_string());
+    }
+
+    Index::Index(Value&& value, int length) : m_value{std::move(value)}, m_length{length} {
+        // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
+        m_hash = number::hash(m_value);
+    }
+
+    Index Index::clone() const { return {m_value.clone(), m_length}; }
+
+    std::size_t Index::hash() const { return m_hash; }
+
+    std::optional<BigInt> get_ratio(const BigInt& x, const BigInt& y) {
+        if (x % y != 0) {
+            return std::nullopt;
+        }
+        return x / y;
+    }
+
+    bool Index::operator==(const Index& rhs) const {
+        assert(m_length == rhs.m_length);
+        auto lhs_num = m_value.get_numerator();
+        auto rhs_num = rhs.m_value.get_numerator();
+        auto lhs_den = m_value.get_denominator();
+        auto rhs_den = rhs.m_value.get_denominator();
+        lhs_num = lhs_num * rhs_den;
+        rhs_num = rhs_num * lhs_den;
+        auto den = lhs_den * rhs_den;
+        assert(den.size() == 0 || den[den.size() - 1] != 0);
+
+        auto diff = lhs_num - rhs_num;
+        while (diff.size() > 0 && diff[diff.size() - 1] == 0) {
+            diff.pop_back();
+        }
+
+        if (diff.size() == 0) {
+            return true;
+        }
+        if (diff[0] != 0) {
+            return false;
+        }
+        if (diff.size() != den.size() + 1) {
+            return false;
+        }
+        auto ratio = get_ratio(diff[diff.size() - 1], den[den.size() - 1] * m_length);
+        if (!ratio) {
+            return false;
+        }
+        for (int i = 0; i < den.size() - 1; i++) {
+            if (ratio != get_ratio(diff[i + 1], den[i] * m_length)) {
+                return false;
+            }
+        }
+        return true;
     }
 } // namespace number
+
+std::size_t std::hash<number::Index>::operator()(const number::Index& i) const noexcept {
+    return i.hash();
+}

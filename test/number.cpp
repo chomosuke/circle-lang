@@ -1,6 +1,7 @@
 #include "lib/number.cpp"
 #include <cstdlib>
 #include <gtest/gtest.h>
+#include <numbers>
 #include <random>
 
 int bf_lexicographically_minimal_rotation(std::string_view str) {
@@ -89,14 +90,15 @@ TEST(Number, PlusMinusMultiplyDivide) {
 }
 
 TEST(Number, Bool) {
-    // NOLINTBEGIN(misc-redundant-expression)
     auto pi = number::Value(1);
-    auto num = pi / pi;
+    // NOLINTNEXTLINE(misc-redundant-expression)
+    auto one = pi / pi;
+    auto num = one.clone();
     for (auto i = 1; i <= 12; i++) {
         num = num * (pi - number::Value(i) / pi);
     }
 
-    auto f = pi / pi;
+    auto f = one.clone();
     for (auto i = 13; i <= 16; i++) {
         f = f * (pi - number::Value(i) / pi);
     }
@@ -104,26 +106,62 @@ TEST(Number, Bool) {
     auto num2 = num * f / f;
     EXPECT_TRUE((num == num2).to_bool());
     EXPECT_FALSE((num != num2).to_bool());
-    EXPECT_FALSE((num > num2)->to_bool());
-    EXPECT_TRUE((num >= num2)->to_bool());
-    EXPECT_FALSE((num < num2)->to_bool());
-    EXPECT_TRUE((num <= num2)->to_bool());
+    EXPECT_FALSE((num > num2).to_bool());
+    EXPECT_TRUE((num >= num2).to_bool());
+    EXPECT_FALSE((num < num2).to_bool());
+    EXPECT_TRUE((num <= num2).to_bool());
 
-    auto num3 = num2 + pi / pi;
-    EXPECT_TRUE((num3 > num)->to_bool());
-    EXPECT_FALSE((num > num3)->to_bool());
-    EXPECT_TRUE((num3 >= num)->to_bool());
-    EXPECT_FALSE((num >= num3)->to_bool());
-    EXPECT_TRUE((num < num3)->to_bool());
-    EXPECT_FALSE((num3 < num)->to_bool());
-    EXPECT_TRUE((num <= num3)->to_bool());
-    EXPECT_FALSE((num3 <= num)->to_bool());
+    auto num3 = num2 + one;
+    EXPECT_TRUE((num3 > num).to_bool());
+    EXPECT_FALSE((num > num3).to_bool());
+    EXPECT_TRUE((num3 >= num).to_bool());
+    EXPECT_FALSE((num >= num3).to_bool());
+    EXPECT_TRUE((num < num3).to_bool());
+    EXPECT_FALSE((num3 < num).to_bool());
+    EXPECT_TRUE((num <= num3).to_bool());
+    EXPECT_FALSE((num3 <= num).to_bool());
     EXPECT_TRUE((num3 != num).to_bool());
     EXPECT_FALSE((num3 == num).to_bool());
 
     auto bignum = 10000000000;
     auto num4 = number::Value(bignum) * pi;
     auto num5 = number::Value(static_cast<long>(static_cast<double>(bignum) * std::numbers::pi));
-    EXPECT_TRUE((num4 > num5)->to_bool());
-    // NOLINTEND(misc-redundant-expression)
+    EXPECT_TRUE((num4 > num5).to_bool());
+}
+
+TEST(Number, Index) {
+    auto pi = number::Value(1);
+    // NOLINTNEXTLINE(misc-redundant-expression)
+    auto one = pi / pi;
+    auto num = one.clone();
+    for (auto i = 1; i <= 12; i++) {
+        num = num * (pi - number::Value(i) / pi);
+    }
+
+    auto f = one.clone();
+    for (auto i = 13; i <= 16; i++) {
+        f = f * (pi - number::Value(i) / pi);
+    }
+
+    auto num2 = num * f / f;
+    auto length = 256;
+
+    auto map = std::unordered_map<number::Index, bool>();
+
+    auto ind1 = number::Index(num.clone(), length);
+    auto ind2 = number::Index(num2.clone(), length);
+    auto ind3 = number::Index(num2 + number::Value(256), length);
+    EXPECT_EQ(ind1.hash(), ind2.hash());
+    EXPECT_EQ(ind1.hash(), ind3.hash());
+
+    auto ind4 = number::Index(num + one, length);
+    auto ind5 = number::Index(num + pi, length);
+
+    map.insert(std::make_pair(ind1.clone(), true));
+
+    EXPECT_TRUE(map.contains(ind1));
+    EXPECT_TRUE(map.contains(ind2));
+    EXPECT_TRUE(map.contains(ind3));
+    EXPECT_FALSE(map.contains(ind4));
+    EXPECT_FALSE(map.contains(ind5));
 }

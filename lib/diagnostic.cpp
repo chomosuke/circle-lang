@@ -1,4 +1,7 @@
 #include "diagnostic.hpp"
+
+#include "number.hpp"
+
 #include <algorithm>
 #include <format>
 #include <sstream>

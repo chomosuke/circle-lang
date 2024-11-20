@@ -1,7 +1,9 @@
 #include "lexer.hpp"
+
 #include "diagnostic.hpp"
 #include "macros.hpp"
 #include "number.hpp"
+
 #include <array>
 #include <climits>
 #include <memory>

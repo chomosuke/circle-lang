@@ -1,7 +1,9 @@
 #include "parser.hpp"
-#include "diagnostic.hpp"
+
 #include "lexer.hpp"
 #include "macros.hpp"
+#include "number.hpp"
+
 #include <cstdio>
 #include <tl/expected.hpp>
 

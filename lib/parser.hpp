@@ -1,9 +1,9 @@
 #pragma once
 
 #include "diagnostic.hpp"
-#include "lib/utils.hpp"
 #include "macros.hpp"
 #include "number.hpp"
+#include "utils.hpp"
 #include <memory>
 #include <tl/expected.hpp>
 #include <variant>
