@@ -2,6 +2,7 @@
 
 #include "macros.hpp"
 #include "vendor/BigInt.hpp"
+#include <functional>
 #include <string_view>
 #include <tl/expected.hpp>
 #include <vector>
@@ -52,6 +53,8 @@ namespace number {
         [[nodiscard]] bool to_bool() const;
     };
 
+    [[nodiscard]] bool equal(const Value& lhs, const Value& rhs);
+
     [[nodiscard]] Value operator+(const Value& lhs, const Value& rhs);
     [[nodiscard]] Value operator-(const Value& lhs, const Value& rhs);
     [[nodiscard]] Value operator*(const Value& lhs, const Value& rhs);
@@ -69,12 +72,16 @@ namespace number {
     class Index {
         // An index of a circular array
       private:
-        Value m_value;
+        std::variant<Value, std::reference_wrapper<const Value>> m_value;
         int m_length;
         std::size_t m_hash;
 
+        Index(const std::variant<Value, std::reference_wrapper<const Value>>& value, int length,
+              std::size_t hash);
+
       public:
         Index(Value&& value, int length);
+        Index(const Value& value, int length);
         [[nodiscard]] Index clone() const;
 
         bool operator==(const Index& rhs) const;

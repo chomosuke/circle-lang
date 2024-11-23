@@ -68,4 +68,8 @@ namespace diag {
     WithInfo<T2> convert_with_info(WithInfo<T1>&& t, std::function<T2(T1&&)> convertor) {
         return {.range{t.range}, .t{convertor(std::move(t.t))}};
     }
+
+    struct RuntimeError {
+        std::string msg;
+    };
 } // namespace diag

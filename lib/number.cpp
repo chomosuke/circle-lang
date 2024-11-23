@@ -457,12 +457,45 @@ namespace number {
         return hasher(num.to_string()) ^ hasher(den.to_string());
     }
 
-    Index::Index(Value&& value, int length) : m_value{std::move(value)}, m_length{length} {
-        // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
-        m_hash = number::hash(m_value);
+    template <typename T>
+    const T& get_const_ref(const std::variant<T, std::reference_wrapper<const T>>& t) {
+        return std::visit(
+            [&]<typename T2>(const T2& t) -> const T& {
+                static_assert(std::is_same_v<T2, std::decay_t<T2>>);
+                // NOLINTNEXTLINE(bugprone-return-const-ref-from-parameter)
+                return t;
+            },
+            t);
     }
 
-    Index Index::clone() const { return {m_value.clone(), m_length}; }
+    Index::Index(const std::variant<Value, std::reference_wrapper<const Value>>& value, int length,
+                 std::size_t hash)
+        : m_value{std::visit(
+            [&]<typename T>(const T& t) {
+                static_assert(std::is_same_v<T, std::decay_t<T>>);
+                // NOLINTNEXTLINE(bugprone-return-const-ref-from-parameter)
+                if constexpr () {
+
+                } else if constexpr() {
+
+                } else {
+
+                }
+            },
+            value)}, m_length{length}, m_hash{hash} {}
+
+    Index::Index(Value&& value, int length) : m_value{std::move(value)}, m_length{length} {
+        // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
+        m_hash = number::hash(get_const_ref(m_value));
+    }
+
+    Index::Index(const Value& value, int length)
+        : m_value{std::reference_wrapper{value}}, m_length{length} {
+        // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
+        m_hash = number::hash(get_const_ref(m_value));
+    }
+
+    Index Index::clone() const { return {m_value, m_length, m_hash}; }
 
     std::size_t Index::hash() const { return m_hash; }
 
@@ -475,17 +508,17 @@ namespace number {
 
     bool Index::operator==(const Index& rhs) const {
         assert(m_length == rhs.m_length);
-        auto lhs_num = m_value.get_numerator();
-        auto rhs_num = rhs.m_value.get_numerator();
-        auto lhs_den = m_value.get_denominator();
-        auto rhs_den = rhs.m_value.get_denominator();
+        auto lhs_num = get_const_ref(m_value).get_numerator();
+        auto rhs_num = get_const_ref(rhs.m_value).get_numerator();
+        auto lhs_den = get_const_ref(m_value).get_denominator();
+        auto rhs_den = get_const_ref(rhs.m_value).get_denominator();
         lhs_num = lhs_num * rhs_den;
         rhs_num = rhs_num * lhs_den;
         auto den = lhs_den * rhs_den;
-        assert(den.size() == 0 || den[den.size() - 1] != 0);
+        assert(den.size() == 0 || den.back() != 0);
 
         auto diff = lhs_num - rhs_num;
-        while (diff.size() > 0 && diff[diff.size() - 1] == 0) {
+        while (diff.size() > 0 && diff.back() == 0) {
             diff.pop_back();
         }
 
@@ -498,7 +531,7 @@ namespace number {
         if (diff.size() != den.size() + 1) {
             return false;
         }
-        auto ratio = get_ratio(diff[diff.size() - 1], den[den.size() - 1] * m_length);
+        auto ratio = get_ratio(diff.back(), den.back() * m_length);
         if (!ratio) {
             return false;
         }
