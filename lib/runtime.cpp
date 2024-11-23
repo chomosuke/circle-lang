@@ -161,7 +161,8 @@ namespace runtime {
         }
         return arr->index(ind_num->get_value());
     }
-    std::unique_ptr<Obj> Index::clone() const {
+    std::unique_ptr<Obj> Index::clone() const { return clone_specialize(); }
+    std::unique_ptr<Index> Index::clone_specialize() const {
         auto subject = std::optional<std::unique_ptr<Obj>>();
         if (m_subject) {
             subject = (*m_subject)->clone();
@@ -169,6 +170,9 @@ namespace runtime {
         return std::unique_ptr<Index>(new Index(std::move(subject), m_index->clone(), get_range()));
     }
 
+    Assign::Assign(std::unique_ptr<Index>&& lhs, std::unique_ptr<Obj>&& rhs,
+                   std::optional<diag::Range> range)
+        : Obj(range), m_lhs{std::move(lhs)}, m_rhs{std::move(rhs)} {}
     Assign::Assign(ast::Assign&& node, diag::Range range)
         : Obj(range), m_lhs{std::make_unique<Index>(std::move(*node.lhs.t), node.lhs.range)},
           m_rhs{from_ast(std::move(node.rhs))} {}
@@ -180,32 +184,100 @@ namespace runtime {
             gca.insert(std::move(*gca_loc), std::move(rhs));
         }
     }
-    std::unique_ptr<Obj> Assign::evaluate(const Array& gca) const {}
-    std::unique_ptr<Obj> Assign::clone() const {}
+    std::unique_ptr<Obj> Assign::evaluate(const Array& /*gca*/) const { return clone(); }
+    std::unique_ptr<Obj> Assign::clone() const {
+        return std::unique_ptr<Obj>(
+            new Assign(m_lhs->clone_specialize(), m_rhs->clone(), get_range()));
+    }
+
+    OperatorBinary::OperatorBinary(number::op::Binary kind, std::unique_ptr<Obj>&& lhs,
+                                   std::unique_ptr<Obj>&& rhs, std::optional<diag::Range> range)
+        : Obj(range), m_kind{kind}, m_lhs{std::move(lhs)}, m_rhs{std::move(rhs)} {}
 
     OperatorBinary::OperatorBinary(ast::OperatorBinary&& node, diag::Range range)
         : Obj(range), m_kind{node.kind}, m_lhs{from_ast(std::move(node.lhs))},
           m_rhs{from_ast(std::move(node.rhs))} {}
 
-    void OperatorBinary::execute(Array& gca) {}
-    std::unique_ptr<Obj> OperatorBinary::evaluate(const Array& gca) const {}
-    std::unique_ptr<Obj> OperatorBinary::clone() const {}
+    void OperatorBinary::execute(Array& /*gca*/) {}
+    std::unique_ptr<Obj> OperatorBinary::evaluate(const Array& gca) const {
+        auto rhs = m_rhs->evaluate(gca);
+        auto* r = dynamic_cast<Number*>(rhs.get());
+        auto lhs = m_lhs->evaluate(gca);
+        auto* l = dynamic_cast<Number*>(lhs.get());
+        if (l == nullptr || r == nullptr) {
+            throw diag::RuntimeError{
+                .msg{std::format("{} Can not operate on non number", get_range()->to_string())}};
+        }
+
+        switch (m_kind) {
+        case number::op::plus:
+            return std::make_unique<Number>(l->get_value() + r->get_value(), std::nullopt);
+        case number::op::minus:
+            return std::make_unique<Number>(l->get_value() - r->get_value(), std::nullopt);
+        case number::op::multiply:
+            return std::make_unique<Number>(l->get_value() * r->get_value(), std::nullopt);
+        case number::op::divide:
+            return std::make_unique<Number>(l->get_value() / r->get_value(), std::nullopt);
+        case number::op::bool_and:
+            return std::make_unique<Number>(l->get_value() && r->get_value(), std::nullopt);
+        case number::op::bool_or:
+            return std::make_unique<Number>(l->get_value() || r->get_value(), std::nullopt);
+        case number::op::equal:
+            return std::make_unique<Number>(l->get_value() == r->get_value(), std::nullopt);
+        case number::op::not_equal:
+            return std::make_unique<Number>(l->get_value() != r->get_value(), std::nullopt);
+        case number::op::smaller:
+            return std::make_unique<Number>(l->get_value() < r->get_value(), std::nullopt);
+        case number::op::smaller_or_equal:
+            return std::make_unique<Number>(l->get_value() <= r->get_value(), std::nullopt);
+        case number::op::greater:
+            return std::make_unique<Number>(l->get_value() > r->get_value(), std::nullopt);
+        case number::op::greater_or_equal:
+            return std::make_unique<Number>(l->get_value() >= r->get_value(), std::nullopt);
+        default:
+            assert(false && "Operator not found");
+        }
+    }
+    std::unique_ptr<Obj> OperatorBinary::clone() const {
+        return std::unique_ptr<Obj>(
+            new OperatorBinary(m_kind, m_lhs->clone(), m_rhs->clone(), get_range()));
+    }
+
+    OperatorUnary::OperatorUnary(number::op::Unary kind, std::unique_ptr<Obj>&& rhs,
+                                 std::optional<diag::Range> range)
+        : Obj(range), m_kind{kind}, m_rhs{std::move(rhs)} {}
 
     OperatorUnary::OperatorUnary(ast::OperatorUnary&& node, diag::Range range)
         : Obj(range), m_kind{node.kind}, m_rhs{from_ast(std::move(node.rhs))} {}
 
-    void OperatorUnary::execute(Array& gca) {}
-    std::unique_ptr<Obj> OperatorUnary::evaluate(const Array& gca) const {}
-    std::unique_ptr<Obj> OperatorUnary::clone() const {}
+    void OperatorUnary::execute(Array& /*gca*/) {}
+    std::unique_ptr<Obj> OperatorUnary::evaluate(const Array& gca) const {
+        auto rhs = m_rhs->evaluate(gca);
+        auto* r = dynamic_cast<Number*>(rhs.get());
+        if (r == nullptr) {
+            throw diag::RuntimeError{
+                .msg{std::format("{} Can not operate on non number", get_range()->to_string())}};
+        }
+
+        switch (m_kind) {
+        case number::op::bool_not:
+            return std::make_unique<Number>(!r->get_value(), std::nullopt);
+        }
+    }
+    std::unique_ptr<Obj> OperatorUnary::clone() const {
+        return std::unique_ptr<Obj>(new OperatorUnary(m_kind, m_rhs->clone(), get_range()));
+    }
 
     Number::Number(ast::Number&& node, diag::Range range)
         : Obj(range), m_value{std::move(node.value)} {}
     Number::Number(number::Value&& value, std::optional<diag::Range> range)
         : Obj(range), m_value{std::move(value)} {}
 
-    void Number::execute(Array& gca) {}
-    std::unique_ptr<Obj> Number::evaluate(const Array& gca) const {}
-    std::unique_ptr<Obj> Number::clone() const {}
+    void Number::execute(Array& /*gca*/) {}
+    std::unique_ptr<Obj> Number::evaluate(const Array& /*gca*/) const { return clone(); }
+    std::unique_ptr<Obj> Number::clone() const {
+        return std::make_unique<Number>(m_value.clone(), get_range());
+    }
 
     Runtime::Runtime(ast::Array&& code)
         : m_gca{static_cast<int>(code.elements.size()), std::nullopt},

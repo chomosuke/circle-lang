@@ -56,7 +56,8 @@ namespace runtime {
       private:
         std::optional<std::unique_ptr<Obj>> m_subject;
         std::unique_ptr<Obj> m_index;
-        Index(std::optional<std::unique_ptr<Obj>>&& subject, std::unique_ptr<Obj>&& index, std::optional<diag::Range> range);
+        Index(std::optional<std::unique_ptr<Obj>>&& subject, std::unique_ptr<Obj>&& index,
+              std::optional<diag::Range> range);
 
       public:
         Index(ast::Index&& node, diag::Range range);
@@ -67,12 +68,15 @@ namespace runtime {
         void execute(Array& gca) override;
         [[nodiscard]] std::unique_ptr<Obj> evaluate(const Array& gca) const override;
         [[nodiscard]] std::unique_ptr<Obj> clone() const override;
+        [[nodiscard]] std::unique_ptr<Index> clone_specialize() const;
     };
 
     class Assign : public Obj {
       private:
         std::unique_ptr<Index> m_lhs;
         std::unique_ptr<Obj> m_rhs;
+        Assign(std::unique_ptr<Index>&& lhs, std::unique_ptr<Obj>&& rhs,
+               std::optional<diag::Range> range);
 
       public:
         Assign(ast::Assign&& node, diag::Range range);
@@ -87,6 +91,8 @@ namespace runtime {
         number::op::Binary m_kind;
         std::unique_ptr<Obj> m_lhs;
         std::unique_ptr<Obj> m_rhs;
+        OperatorBinary(number::op::Binary kind, std::unique_ptr<Obj>&& lhs,
+                       std::unique_ptr<Obj>&& rhs, std::optional<diag::Range> range);
 
       public:
         OperatorBinary(ast::OperatorBinary&& node, diag::Range range);
@@ -100,6 +106,8 @@ namespace runtime {
       private:
         number::op::Unary m_kind;
         std::unique_ptr<Obj> m_rhs;
+        OperatorUnary(number::op::Unary kind, std::unique_ptr<Obj>&& rhs,
+                      std::optional<diag::Range> range);
 
       public:
         OperatorUnary(ast::OperatorUnary&& node, diag::Range range);
