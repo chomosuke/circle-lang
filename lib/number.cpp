@@ -191,6 +191,8 @@ namespace number {
 
     const std::vector<BigInt>& Value::get_denominator() const { return m_denominator; }
 
+    std::optional<std::vector<BigInt>> Value::divide() const {}
+
     std::optional<std::string> Value::to_letters() const {
         if (m_numerator.size() == 0) {
             return std::nullopt;
@@ -468,34 +470,26 @@ namespace number {
             t);
     }
 
-    Index::Index(const std::variant<Value, std::reference_wrapper<const Value>>& value, int length,
-                 std::size_t hash)
-        : m_value{std::visit(
-            [&]<typename T>(const T& t) {
-                static_assert(std::is_same_v<T, std::decay_t<T>>);
-                // NOLINTNEXTLINE(bugprone-return-const-ref-from-parameter)
-                if constexpr () {
-
-                } else if constexpr() {
-
-                } else {
-
-                }
-            },
-            value)}, m_length{length}, m_hash{hash} {}
-
-    Index::Index(Value&& value, int length) : m_value{std::move(value)}, m_length{length} {
-        // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
-        m_hash = number::hash(get_const_ref(m_value));
-    }
-
+    Index::Index(Value&& value, int length, std::size_t hash)
+        : m_value{std::move(value)}, m_length{length}, m_hash{hash} {}
     Index::Index(const Value& value, int length)
         : m_value{std::reference_wrapper{value}}, m_length{length} {
         // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
         m_hash = number::hash(get_const_ref(m_value), m_length);
     }
 
-    Index Index::clone() const { return {m_value, m_length, m_hash}; }
+    Index::Index(Value&& value, int length) : m_value{std::move(value)}, m_length{length} {
+        // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
+        m_hash = number::hash(get_const_ref(m_value), m_length);
+    }
+
+    Index Index::make_ref(const Value& value, int length) { return {value, length}; }
+
+    Index Index::clone() const {
+        return {std::get<Value>(m_value)
+                    .clone(), // cloning a const reference index is probably lifetime violation
+                m_length, m_hash};
+    }
 
     std::size_t Index::hash() const { return m_hash; }
 

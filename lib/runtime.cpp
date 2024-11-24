@@ -1,12 +1,12 @@
-
 #include "runtime.hpp"
 
 #include "diagnostic.hpp"
 #include "parser.hpp"
 
-#include <algorithm>
 #include <iostream>
 #include <variant>
+
+#define DEBUG_OUTPUT
 
 namespace runtime {
     std::unique_ptr<Obj> from_ast(ast::Node<ast::Any>&& node) {
@@ -57,37 +57,42 @@ namespace runtime {
             std::format("{} Attempting to index an array with a non number.", range.to_string())}};
     }
 
-    void Array::insert(std::vector<number::Value>&& indices, std::unique_ptr<Obj> v) {
+    void Array::insert(std::vector<diag::WithInfo<number::Value>>&& indices,
+                       std::unique_ptr<Obj> v) {
         auto* walk = this;
         auto last = std::move(indices.back());
         indices.pop_back();
         for (const auto& index : indices) {
-            auto e = walk->m_elements.find(number::Index(index, walk->m_length));
+            auto e = walk->m_elements.find(number::Index::make_ref(index.t, walk->m_length));
             if (e == walk->m_elements.end()) {
-                throw_index_non_array(*walk->get_range());
+                throw_index_non_array(index.range);
             }
             walk = dynamic_cast<Array*>(e->second.get());
             if (walk == nullptr) {
-                throw_index_non_array(*walk->get_range());
+                throw_index_non_array(index.range);
             }
         }
-        walk->m_elements.insert(std::make_pair(number::Index(last, m_length), std::move(v)));
+        walk->m_elements.insert(
+            std::make_pair(number::Index(std::move(last.t), m_length), std::move(v)));
     }
     std::unique_ptr<Obj> Array::index(const number::Value& i) const {
-        auto e = m_elements.find(number::Index(i, m_length));
+        auto e = m_elements.find(number::Index::make_ref(i, m_length));
         if (e == m_elements.end()) {
             return std::make_unique<Number>(number::Value(1), std::nullopt);
         }
         return e->second->clone();
     }
 
-    void Array::execute(Array& gca) {
+    void Array::execute(Array& gca, std::istream& in, std::ostream& out) {
+#ifdef DEBUG_OUTPUT
+        std::cout << "Exe array length " << m_length << '\n';
+#endif
         const auto zero = number::Value(BigInt(0));
         auto first = index(zero)->evaluate(gca);
         auto* number = dynamic_cast<Number*>(first.get());
         while (number == nullptr || !number::equal(number->get_value(), zero)) {
-            for (auto i = 0; i < m_length; i++) {
-                index(number::Value(i))->execute(gca);
+            for (auto i = 1; i < m_length; i++) {
+                index(number::Value(i))->execute(gca, in, out);
             }
 
             first = index(zero)->evaluate(gca);
@@ -115,7 +120,8 @@ namespace runtime {
                                  : std::nullopt},
           m_index{from_ast(std::move(node.index))} {}
 
-    std::optional<std::vector<number::Value>> Index::get_gca_location(const Array& gca) const {
+    std::optional<std::vector<diag::WithInfo<number::Value>>>
+    Index::get_gca_location(const Array& gca) const {
         auto index = m_index->evaluate(gca);
         auto* ind_num = dynamic_cast<Number*>(index.get());
         if (ind_num == nullptr) {
@@ -132,17 +138,22 @@ namespace runtime {
             auto loc = subject->get_gca_location(gca);
             // push back ind_num
             if (loc) {
-                loc->push_back(ind_num->get_value().clone());
+                loc->emplace_back(*ind_num->get_range(), ind_num->get_value().clone());
             }
             return loc;
         } else {
-            auto loc = std::vector<number::Value>();
-            loc.push_back(ind_num->get_value().clone());
+            auto loc = std::vector<diag::WithInfo<number::Value>>();
+            loc.emplace_back(*ind_num->get_range(), ind_num->get_value().clone());
             return loc;
         }
     }
 
-    void Index::execute(Array& /*gca*/) {}
+    void Index::execute(Array& gca, std::istream& in, std::ostream& out) {
+        evaluate(gca)->execute(gca, in, out);
+#ifdef DEBUG_OUTPUT
+        std::cout << "Exe index" << '\n';
+#endif
+    }
     std::unique_ptr<Obj> Index::evaluate(const Array& gca) const {
         const auto* arr = &gca;
         // declaring this early so that it live as long as arr
@@ -159,6 +170,9 @@ namespace runtime {
         if (ind_num == nullptr) {
             throw_index_non_number(*get_range());
         }
+#ifdef DEBUG_OUTPUT
+        std::cout << "Eval index " << diag::to_string(ind_num->get_value()) << '\n';
+#endif
         return arr->index(ind_num->get_value());
     }
     std::unique_ptr<Obj> Index::clone() const { return clone_specialize(); }
@@ -177,9 +191,18 @@ namespace runtime {
         : Obj(range), m_lhs{std::make_unique<Index>(std::move(*node.lhs.t), node.lhs.range)},
           m_rhs{from_ast(std::move(node.rhs))} {}
 
-    void Assign::execute(Array& gca) {
+    void Assign::execute(Array& gca, std::istream& /*in*/, std::ostream& /*out*/) {
         auto rhs = m_rhs->evaluate(gca);
         auto gca_loc = m_lhs->get_gca_location(gca);
+#ifdef DEBUG_OUTPUT
+        std::cout << "Exe assign";
+        if (gca_loc) {
+            for (const auto& [_, v] : *gca_loc) {
+                std::cout << ' ' << diag::to_string(v);
+            }
+        }
+        std::cout << '\n';
+#endif
         if (gca_loc) {
             gca.insert(std::move(*gca_loc), std::move(rhs));
         }
@@ -198,7 +221,12 @@ namespace runtime {
         : Obj(range), m_kind{node.kind}, m_lhs{from_ast(std::move(node.lhs))},
           m_rhs{from_ast(std::move(node.rhs))} {}
 
-    void OperatorBinary::execute(Array& /*gca*/) {}
+    void OperatorBinary::execute(Array& gca, std::istream& in, std::ostream& out) {
+        evaluate(gca)->execute(gca, in, out);
+#ifdef DEBUG_OUTPUT
+        std::cout << "Exe " << diag::to_string(m_kind) << '\n';
+#endif
+    }
     std::unique_ptr<Obj> OperatorBinary::evaluate(const Array& gca) const {
         auto rhs = m_rhs->evaluate(gca);
         auto* r = dynamic_cast<Number*>(rhs.get());
@@ -208,6 +236,11 @@ namespace runtime {
             throw diag::RuntimeError{
                 .msg{std::format("{} Can not operate on non number", get_range()->to_string())}};
         }
+
+#ifdef DEBUG_OUTPUT
+        std::cout << "Eval " << diag::to_string(l->get_value()) << ' ' << diag::to_string(m_kind)
+                  << ' ' << diag::to_string(r->get_value()) << '\n';
+#endif
 
         switch (m_kind) {
         case number::op::plus:
@@ -250,7 +283,12 @@ namespace runtime {
     OperatorUnary::OperatorUnary(ast::OperatorUnary&& node, diag::Range range)
         : Obj(range), m_kind{node.kind}, m_rhs{from_ast(std::move(node.rhs))} {}
 
-    void OperatorUnary::execute(Array& /*gca*/) {}
+    void OperatorUnary::execute(Array& gca, std::istream& in, std::ostream& out) {
+        evaluate(gca)->execute(gca, in, out);
+#ifdef DEBUG_OUTPUT
+        std::cout << "Exe " << diag::to_string(m_kind) << '\n';
+#endif
+    }
     std::unique_ptr<Obj> OperatorUnary::evaluate(const Array& gca) const {
         auto rhs = m_rhs->evaluate(gca);
         auto* r = dynamic_cast<Number*>(rhs.get());
@@ -258,6 +296,10 @@ namespace runtime {
             throw diag::RuntimeError{
                 .msg{std::format("{} Can not operate on non number", get_range()->to_string())}};
         }
+
+#ifdef DEBUG_OUTPUT
+        std::cout << "Eval " << diag::to_string(m_kind) << '\n';
+#endif
 
         switch (m_kind) {
         case number::op::bool_not:
@@ -273,10 +315,53 @@ namespace runtime {
     Number::Number(number::Value&& value, std::optional<diag::Range> range)
         : Obj(range), m_value{std::move(value)} {}
 
-    void Number::execute(Array& /*gca*/) {}
+    const number::Value& Number::get_value() const { return m_value; }
+
+    void Number::execute(Array& /*gca*/, std::istream& /*in*/, std::ostream& /*out*/) {
+#ifdef DEBUG_OUTPUT
+        std::cout << "Exe number" << '\n';
+#endif
+    }
     std::unique_ptr<Obj> Number::evaluate(const Array& /*gca*/) const { return clone(); }
     std::unique_ptr<Obj> Number::clone() const {
         return std::make_unique<Number>(m_value.clone(), get_range());
+    }
+
+    StdInput::StdInput() : Obj(std::nullopt) {}
+    void StdInput::execute(Array& gca, std::istream& in, std::ostream& /*out*/) {
+#ifdef DEBUG_OUTPUT
+        std::cout << "Exe std_input" << '\n';
+#endif
+        auto chr = in.get();
+        auto loc = std::vector<diag::WithInfo<number::Value>>();
+        loc.emplace_back(diag::Range{}, number::Value("std_input_char"));
+        gca.insert(std::move(loc), std::make_unique<Number>(number::Value(chr), std::nullopt));
+    }
+    [[nodiscard]] std::unique_ptr<Obj> StdInput::evaluate(const Array& /*gca*/) const {
+        return clone();
+    }
+    [[nodiscard]] std::unique_ptr<Obj> StdInput::clone() const {
+        return std::make_unique<StdInput>();
+    }
+
+    StdOutput::StdOutput() : Obj(std::nullopt) {}
+    void StdOutput::execute(Array& gca, std::istream& /*in*/, std::ostream& out) {
+#ifdef DEBUG_OUTPUT
+        std::cout << "Exe std_output" << '\n';
+#endif
+        auto obj = gca.index(number::Value("std_output_char"));
+        auto* num = dynamic_cast<Number*>(obj.get());
+        if (num == nullptr) {
+            throw diag::RuntimeError{.msg{"(std_output_char) isn't a number."}};
+        }
+        std::cout << "hey" << '\n';
+        out << num->get_value().to_string();
+    }
+    [[nodiscard]] std::unique_ptr<Obj> StdOutput::evaluate(const Array& /*gca*/) const {
+        return clone();
+    }
+    [[nodiscard]] std::unique_ptr<Obj> StdOutput::clone() const {
+        return std::make_unique<StdOutput>();
     }
 
     Runtime::Runtime(ast::Array&& code)
@@ -285,7 +370,20 @@ namespace runtime {
                  code.elements.empty()
                      ? diag::Range{.start{.line{0}, .column{0}}, .end{.line{0}, .column{0}}}
                      : diag::Range{.start{code.elements[0].range.start},
-                                   .end{code.elements.back().range.end}}} {}
+                                   .end{code.elements.back().range.end}}} {
+        auto loc = std::vector<diag::WithInfo<number::Value>>();
+        loc.emplace_back(diag::Range{}, number::Value("std_input"));
+        m_gca.insert(std::move(loc), std::make_unique<StdInput>());
+        loc = std::vector<diag::WithInfo<number::Value>>();
+        loc.emplace_back(diag::Range{}, number::Value("std_output"));
+        m_gca.insert(std::move(loc), std::make_unique<StdOutput>());
+    }
 
-    void Runtime::run(std::istream& in, std::ostream& out, std::ostream& err) {}
+    void Runtime::run(std::istream& in, std::ostream& out, std::ostream& err) {
+        try {
+            m_code.execute(m_gca, in, out);
+        } catch (const diag::RuntimeError& e) {
+            err << e.msg;
+        }
+    }
 } // namespace runtime

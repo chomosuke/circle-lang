@@ -30,7 +30,7 @@ namespace runtime {
 
         [[nodiscard]] std::optional<diag::Range> get_range() const;
 
-        virtual void execute(Array& gca) = 0;
+        virtual void execute(Array& gca, std::istream& in, std::ostream& out) = 0;
         [[nodiscard]] virtual std::unique_ptr<Obj> evaluate(const Array& gca) const = 0;
         [[nodiscard]] virtual std::unique_ptr<Obj> clone() const = 0;
     };
@@ -44,10 +44,10 @@ namespace runtime {
         Array(int length, std::optional<diag::Range> range);
         Array(ast::Array&& node, diag::Range range);
 
-        void insert(std::vector<number::Value>&& indices, std::unique_ptr<Obj> v);
+        void insert(std::vector<diag::WithInfo<number::Value>>&& indices, std::unique_ptr<Obj> v);
         std::unique_ptr<Obj> index(const number::Value& i) const;
 
-        void execute(Array& gca) override;
+        void execute(Array& gca, std::istream& in, std::ostream& out) override;
         std::unique_ptr<Obj> evaluate(const Array& gca) const override;
         std::unique_ptr<Obj> clone() const override;
     };
@@ -62,10 +62,10 @@ namespace runtime {
       public:
         Index(ast::Index&& node, diag::Range range);
 
-        [[nodiscard]] std::optional<std::vector<number::Value>>
+        [[nodiscard]] std::optional<std::vector<diag::WithInfo<number::Value>>>
         get_gca_location(const Array& gca) const;
 
-        void execute(Array& gca) override;
+        void execute(Array& gca, std::istream& in, std::ostream& out) override;
         [[nodiscard]] std::unique_ptr<Obj> evaluate(const Array& gca) const override;
         [[nodiscard]] std::unique_ptr<Obj> clone() const override;
         [[nodiscard]] std::unique_ptr<Index> clone_specialize() const;
@@ -81,7 +81,7 @@ namespace runtime {
       public:
         Assign(ast::Assign&& node, diag::Range range);
 
-        void execute(Array& gca) override;
+        void execute(Array& gca, std::istream& in, std::ostream& out) override;
         [[nodiscard]] std::unique_ptr<Obj> evaluate(const Array& gca) const override;
         [[nodiscard]] std::unique_ptr<Obj> clone() const override;
     };
@@ -97,7 +97,7 @@ namespace runtime {
       public:
         OperatorBinary(ast::OperatorBinary&& node, diag::Range range);
 
-        void execute(Array& gca) override;
+        void execute(Array& gca, std::istream& in, std::ostream& out) override;
         [[nodiscard]] std::unique_ptr<Obj> evaluate(const Array& gca) const override;
         [[nodiscard]] std::unique_ptr<Obj> clone() const override;
     };
@@ -112,7 +112,7 @@ namespace runtime {
       public:
         OperatorUnary(ast::OperatorUnary&& node, diag::Range range);
 
-        void execute(Array& gca) override;
+        void execute(Array& gca, std::istream& in, std::ostream& out) override;
         [[nodiscard]] std::unique_ptr<Obj> evaluate(const Array& gca) const override;
         [[nodiscard]] std::unique_ptr<Obj> clone() const override;
     };
@@ -127,7 +127,25 @@ namespace runtime {
 
         [[nodiscard]] const number::Value& get_value() const;
 
-        void execute(Array& gca) override;
+        void execute(Array& gca, std::istream& in, std::ostream& out) override;
+        [[nodiscard]] std::unique_ptr<Obj> evaluate(const Array& gca) const override;
+        [[nodiscard]] std::unique_ptr<Obj> clone() const override;
+    };
+
+    class StdInput : public Obj {
+      public:
+        StdInput();
+
+        void execute(Array& gca, std::istream& in, std::ostream& out) override;
+        [[nodiscard]] std::unique_ptr<Obj> evaluate(const Array& gca) const override;
+        [[nodiscard]] std::unique_ptr<Obj> clone() const override;
+    };
+
+    class StdOutput : public Obj {
+      public:
+        StdOutput();
+
+        void execute(Array& gca, std::istream& in, std::ostream& out) override;
         [[nodiscard]] std::unique_ptr<Obj> evaluate(const Array& gca) const override;
         [[nodiscard]] std::unique_ptr<Obj> clone() const override;
     };

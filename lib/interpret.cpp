@@ -2,7 +2,7 @@
 
 #include "diagnostic.hpp"
 #include "parser.hpp"
-// #include "runtime.hpp"
+#include "runtime.hpp"
 
 #include <ostream>
 #include <string>
@@ -18,6 +18,6 @@ void interpret(const std::string& src_code, std::istream& in, std::ostream& out,
         }
     }
 
-    // auto runtime = runtime::Runtime(std::move(*parsed));
-    // runtime.run(in, out, err);
+    auto runtime = runtime::Runtime(std::move(*parsed));
+    runtime.run(in, out, err);
 }

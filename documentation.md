@@ -53,10 +53,12 @@ way:
     `<lvalue>`.
   - Assignment statement evaluate to themselves.
   - Array evaluate to themselves.
-  - When array are executed, it will execute each of its elements whose index is
-    a multiple of $\pi$ in order. Every time it executes an element at the index
-    that is a multiple of the array's length and that element evaluates to 0,
-    the array will stop executing.
+  - When array are executed, it will go through each of its elements whose index
+    is a multiple of $\pi$ in order. Each element at the index that is a
+    multiple of the array's length will be evaluated and if that element
+    evaluates to 0, the array will stop executing. Each element that's not at
+    the index that is a multiple of the array's length will be executed.
+
   - Operators evaluate as you'd expect.
 - There are no local variable, because that implies call stack, which is not
   circular.

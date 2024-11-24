@@ -48,6 +48,7 @@ namespace number {
 
         [[nodiscard]] const std::vector<BigInt>& get_numerator() const;
         [[nodiscard]] const std::vector<BigInt>& get_denominator() const;
+        [[nodiscard]] std::optional<std::vector<BigInt>> divide() const;
         [[nodiscard]] std::optional<std::string> to_letters() const;
         [[nodiscard]] std::string to_string() const;
         [[nodiscard]] bool to_bool() const;
@@ -76,12 +77,12 @@ namespace number {
         int m_length;
         std::size_t m_hash;
 
-        Index(const std::variant<Value, std::reference_wrapper<const Value>>& value, int length,
-              std::size_t hash);
+        Index(Value&& value, int length, std::size_t hash);
+        Index(const Value& value, int length);
 
       public:
         Index(Value&& value, int length);
-        Index(const Value& value, int length);
+        static Index make_ref(const Value& value, int length);
         [[nodiscard]] Index clone() const;
 
         bool operator==(const Index& rhs) const;

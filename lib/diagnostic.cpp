@@ -88,14 +88,7 @@ namespace diag {
             assert(false && "Operator not found");
         }
     }
-    std::string to_string(const number::Value& v) {
-        auto letters = v.to_letters();
-        if (letters) {
-            return *letters;
-        }
-
-        return v.to_string();
-    }
+    std::string to_string(const number::Value& v) { return v.to_letters().value_or(v.to_string()); }
 
     std::string Range::to_string() const {
         return std::format("{}:{}-{}:{}", start.line + 1, start.column + 1, end.line + 1,

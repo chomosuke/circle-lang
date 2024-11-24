@@ -3,8 +3,10 @@
 #include <gtest/gtest.h>
 
 TEST(Interpret, HelloWorld) {
-    std::stringstream ss{};
-    std::stringstream s_nil{};
-    // interpret(sample_programs::HELLO_WORLD, s_nil, ss, s_nil);
-    // EXPECT_EQ(ss.str(), "Hello world\n");
+    std::stringstream out{};
+    std::stringstream in{};
+    std::stringstream err{};
+    interpret(sample_programs::HELLO_WORLD, in, out, err);
+    EXPECT_EQ(err.str(), "");
+    EXPECT_EQ(out.str(), "Hello world\n");
 }

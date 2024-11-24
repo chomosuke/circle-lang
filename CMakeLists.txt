@@ -35,8 +35,8 @@ file(GLOB_RECURSE src CONFIGURE_DEPENDS "src/*.cpp")
 add_executable(circle-lang ${src})
 target_link_libraries(circle-lang PRIVATE lib)
 
-find_package(Boost CONFIG REQUIRED COMPONENTS program_options)
-target_link_libraries(circle-lang PRIVATE Boost::boost Boost::program_options)
+find_package(boost_program_options CONFIG REQUIRED program_options)
+target_link_libraries(circle-lang PRIVATE Boost::program_options)
 
 
 enable_testing()
@@ -50,11 +50,14 @@ target_link_libraries(all-tests PRIVATE GTest::gtest_main)
 
 target_compile_options(all-tests PRIVATE
 	-g
-	# -fsanitize=address,undefined
+	-O0
+	-fsanitize=address,undefined
 )
 
 target_link_options(all-tests PRIVATE
-	# -fsanitize=address,undefined
+	-g
+	-O0
+	-fsanitize=address,undefined
 )
 
 include(GoogleTest)

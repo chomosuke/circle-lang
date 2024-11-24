@@ -149,7 +149,7 @@ TEST(Number, Index) {
     auto map = std::unordered_map<number::Index, bool>();
 
     auto ind1 = number::Index(num.clone(), length);
-    auto ind2 = number::Index(num2, length);
+    auto ind2 = number::Index::make_ref(num2, length);
     auto ind3 = number::Index(num2 + number::Value(length), length);
     auto ind4 = number::Index(num + one, length);
     auto ind5 = number::Index(num + pi, length);
