@@ -6,6 +6,7 @@
 
 #include <array>
 #include <climits>
+#include <cstdio>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -90,7 +91,7 @@ namespace partial {
 
     consteval std::array<bool, CHAR_MAX> operator_char_set() {
         std::array<bool, CHAR_MAX> lookup{};
-        std::string char_set{"+-*/%&|=<>:"};
+        std::string char_set{"+-*/&|=!<>:"};
         for (auto c : char_set) {
             lookup[c] = true; // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
         }
@@ -274,7 +275,7 @@ std::optional<std::vector<token::Token>> lex(std::string_view src_code, diag::Di
     std::vector<token::Token> tokens{};
     std::unique_ptr<partial::Token> partial{std::make_unique<partial::WhiteSpace>()};
     diag::Range range{.start{.line{0}, .column{0}}, .end{.line{0}, .column{0}}};
-    for (const char& c : src_code) {
+    auto read_char = [&](char c) {
         auto maybe_next_state = partial->read_char(c);
         if (maybe_next_state) {
             auto next_state = std::move(*maybe_next_state);
@@ -289,6 +290,11 @@ std::optional<std::vector<token::Token>> lex(std::string_view src_code, diag::Di
         } else {
             diags.insert(diag::Diagnostic{
                 .level{diag::error}, .range{range}, .message{maybe_next_state.error()}});
+        }
+    };
+    for (const char& c : src_code) {
+        read_char(c);
+        if (diags.has_fatal()) {
             return std::nullopt;
         }
         if (c == '\n') {
@@ -297,6 +303,9 @@ std::optional<std::vector<token::Token>> lex(std::string_view src_code, diag::Di
         } else {
             range.end.column++;
         }
+    }
+    if (!src_code.empty() && std::isspace(src_code.back()) == 0) {
+        read_char('\n');
     }
     return tokens;
 }

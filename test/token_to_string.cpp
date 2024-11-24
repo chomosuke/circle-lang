@@ -8,13 +8,13 @@ namespace token {
         } else if constexpr (std::is_same_v<T, CloseBracket>) {
             return " )";
         } else if constexpr (std::is_same_v<T, Semicolon>) {
-            return "; ";
+            return ";\n";
         } else if constexpr (std::is_same_v<T, OpenBracket2>) {
-            return "(( ";
+            return "((\n";
         } else if constexpr (std::is_same_v<T, CloseBracket2>) {
-            return " ))";
+            return "))";
         } else if constexpr (std::is_same_v<T, Comment>) {
-            return std::format("#{}", t.content);
+            return std::format("#{}\n", t.content);
         } else if constexpr (std::is_same_v<T, Number>) {
             return diag::to_string(t.value);
         } else if constexpr (std::is_same_v<T, Assign>) {

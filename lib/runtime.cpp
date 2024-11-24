@@ -6,7 +6,7 @@
 #include <iostream>
 #include <variant>
 
-#define DEBUG_OUTPUT
+// #define DEBUG_OUTPUT
 
 namespace runtime {
     std::unique_ptr<Obj> from_ast(ast::Node<ast::Any>&& node) {
@@ -42,8 +42,8 @@ namespace runtime {
     Array::Array(ast::Array&& node, diag::Range range)
         : Obj(range), m_length{static_cast<int>(node.elements.size())} {
         for (auto i = 0; i < node.elements.size(); i++) {
-            m_elements.insert(std::make_pair(number::Index(number::Value(i), m_length),
-                                             from_ast(std::move(node.elements[i]))));
+            m_elements.emplace(number::Index(number::Value(i), m_length),
+                               from_ast(std::move(node.elements[i])));
         }
     }
     Array::Array(int length, std::optional<diag::Range> range) : Obj(range), m_length{length} {}
@@ -72,8 +72,8 @@ namespace runtime {
                 throw_index_non_array(index.range);
             }
         }
-        walk->m_elements.insert(
-            std::make_pair(number::Index(std::move(last.t), m_length), std::move(v)));
+        walk->m_elements.insert_or_assign(number::Index(std::move(last.t), walk->m_length),
+                                          std::move(v));
     }
     std::unique_ptr<Obj> Array::index(const number::Value& i) const {
         auto e = m_elements.find(number::Index::make_ref(i, m_length));
@@ -103,7 +103,7 @@ namespace runtime {
     std::unique_ptr<Obj> Array::clone() const {
         auto na = std::make_unique<Array>(m_length, get_range());
         for (const auto& [i, e] : m_elements) {
-            na->m_elements.insert(std::make_pair(i.clone(), e->clone()));
+            na->m_elements.emplace(i.clone(), e->clone());
         }
         return na;
     }
@@ -354,7 +354,6 @@ namespace runtime {
         if (num == nullptr) {
             throw diag::RuntimeError{.msg{"(std_output_char) isn't a number."}};
         }
-        std::cout << "hey" << '\n';
         out << num->get_value().to_string();
     }
     [[nodiscard]] std::unique_ptr<Obj> StdOutput::evaluate(const Array& /*gca*/) const {

@@ -284,7 +284,7 @@ namespace ast {
                                             std::move(std::get<Number>(irs.back().t)))}};
                             }
                         }
-                        auto range = expr.range;
+                        auto range = token->range;
                         if (last) {
                             irs.pop_back();
                             range.start = last->range.start;

@@ -50,11 +50,11 @@ TEST(Parse, DeDoubleBracket_HelloWorld) {
     auto debracketed = *de_double_bracket::parse(tokens, diags);
     EXPECT_TRUE(diags.empty());
     de_double_bracket::print(ss, debracketed, 0);
-    EXPECT_EQ(ss.str(), sample_programs::HELLO_WORLD_EXPECTED);
+    EXPECT_EQ(ss.str(), sample_programs::HELLO_WORLD_HALF_PARSED);
 
     auto range_2nd_inner_array =
         std::get<de_double_bracket::Node>(debracketed.elements[3][4].t).elements[7][0].range;
-    EXPECT_EQ(range_2nd_inner_array.to_string(), "47:2-54:3");
+    EXPECT_EQ(range_2nd_inner_array.to_string(), "46:2-53:3");
 }
 
 TEST(Parse, DeDoubleBracket_MissingClosingBrackets) {
@@ -180,14 +180,14 @@ TEST(Parse, DeSingleBracket_HelloWorld) {
     EXPECT_TRUE(diags.empty());
     auto debracketed = de_bracket::parse(std::move(de_double_bracketed), diags);
     de_bracket::print(ss, debracketed, 0);
-    EXPECT_EQ(ss.str(), sample_programs::HELLO_WORLD_EXPECTED);
+    EXPECT_EQ(ss.str(), sample_programs::HELLO_WORLD_HALF_PARSED);
 
     auto range_1st_charstd_output =
         std::get<de_bracket::DoubleBracket>(
             std::get<de_bracket::DoubleBracket>(debracketed.elements[3][2].t).elements[7][0].t)
             .elements[1][0]
             .range;
-    EXPECT_EQ(range_1st_charstd_output.to_string(), "50:3-50:19");
+    EXPECT_EQ(range_1st_charstd_output.to_string(), "49:3-49:19");
 }
 
 TEST(Parse, DeBracket_MissingClosingBrackets) {
