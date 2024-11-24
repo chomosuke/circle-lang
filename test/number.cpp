@@ -149,13 +149,14 @@ TEST(Number, Index) {
     auto map = std::unordered_map<number::Index, bool>();
 
     auto ind1 = number::Index(num.clone(), length);
-    auto ind2 = number::Index(num2.clone(), length);
-    auto ind3 = number::Index(num2 + number::Value(256), length);
-    EXPECT_EQ(ind1.hash(), ind2.hash());
-    EXPECT_EQ(ind1.hash(), ind3.hash());
-
+    auto ind2 = number::Index(num2, length);
+    auto ind3 = number::Index(num2 + number::Value(length), length);
     auto ind4 = number::Index(num + one, length);
     auto ind5 = number::Index(num + pi, length);
+    EXPECT_EQ(ind1.hash(), ind2.hash());
+    EXPECT_EQ(ind1.hash(), ind3.hash());
+    EXPECT_NE(ind1.hash(), ind4.hash());
+    EXPECT_NE(ind1.hash(), ind5.hash());
 
     map.insert(std::make_pair(ind1.clone(), true));
 

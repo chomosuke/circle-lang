@@ -441,7 +441,7 @@ namespace number {
         return result;
     }
 
-    std::size_t hash(const Value& value) {
+    std::size_t hash(const Value& value, int length) {
         auto pi = 314159;
         auto num = substitute(value.get_numerator(), pi);
         auto den = substitute(value.get_denominator(), pi);
@@ -452,7 +452,7 @@ namespace number {
             num = -num;
             den = -den;
         }
-        num %= den * pi;
+        num %= den * length * pi;
         auto hasher = std::hash<std::string>();
         return hasher(num.to_string()) ^ hasher(den.to_string());
     }
@@ -492,7 +492,7 @@ namespace number {
     Index::Index(const Value& value, int length)
         : m_value{std::reference_wrapper{value}}, m_length{length} {
         // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
-        m_hash = number::hash(get_const_ref(m_value));
+        m_hash = number::hash(get_const_ref(m_value), m_length);
     }
 
     Index Index::clone() const { return {m_value, m_length, m_hash}; }
@@ -508,16 +508,16 @@ namespace number {
 
     bool Index::operator==(const Index& rhs) const {
         assert(m_length == rhs.m_length);
-        auto lhs_num = get_const_ref(m_value).get_numerator();
-        auto rhs_num = get_const_ref(rhs.m_value).get_numerator();
-        auto lhs_den = get_const_ref(m_value).get_denominator();
-        auto rhs_den = get_const_ref(rhs.m_value).get_denominator();
-        lhs_num = lhs_num * rhs_den;
-        rhs_num = rhs_num * lhs_den;
+        const auto& lhs_num = get_const_ref(m_value).get_numerator();
+        const auto& rhs_num = get_const_ref(rhs.m_value).get_numerator();
+        const auto& lhs_den = get_const_ref(m_value).get_denominator();
+        const auto& rhs_den = get_const_ref(rhs.m_value).get_denominator();
+        auto lhs_nd = lhs_num * rhs_den;
+        auto rhs_nd = rhs_num * lhs_den;
         auto den = lhs_den * rhs_den;
         assert(den.size() == 0 || den.back() != 0);
 
-        auto diff = lhs_num - rhs_num;
+        auto diff = lhs_nd - rhs_nd;
         while (diff.size() > 0 && diff.back() == 0) {
             diff.pop_back();
         }
