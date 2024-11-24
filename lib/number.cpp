@@ -191,8 +191,6 @@ namespace number {
 
     const std::vector<BigInt>& Value::get_denominator() const { return m_denominator; }
 
-    std::optional<std::vector<BigInt>> Value::divide() const {}
-
     std::optional<std::string> Value::to_letters() const {
         if (m_numerator.size() == 0) {
             return std::nullopt;
