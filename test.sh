@@ -1,6 +1,6 @@
 #!/bin/bash
 while true; do
-	cmake --build build --target all-tests
+	cmake --build build-debug --target all-tests
 	exitcode=$?
 	RED='\033[0;31m'
 	NC='\033[0m'
@@ -8,7 +8,7 @@ while true; do
 		echo -e "${RED}Compilation failed${NC}"
 	else
 		# cmake --build build --target test
-		timeout 2 ./build/all-tests
+		timeout 2 ./build-debug/all-tests
 		exitcode=$?
 		if [ $exitcode -eq 124 ]; then
 			echo -e "${RED}Timed out${NC}"

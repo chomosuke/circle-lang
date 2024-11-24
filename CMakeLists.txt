@@ -11,6 +11,9 @@ add_compile_options(
 	-Wno-sign-compare
 )
 
+set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0 -fsanitize=address,undefined")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
 project(circle-lang LANGUAGES CXX)
 
 include_directories("./")
@@ -48,17 +51,6 @@ target_link_libraries(all-tests PRIVATE lib)
 find_package(GTest CONFIG REQUIRED)
 target_link_libraries(all-tests PRIVATE GTest::gtest_main)
 
-target_compile_options(all-tests PRIVATE
-	-g
-	-O0
-	-fsanitize=address,undefined
-)
-
-target_link_options(all-tests PRIVATE
-	-g
-	-O0
-	-fsanitize=address,undefined
-)
 
 include(GoogleTest)
 gtest_discover_tests(all-tests)
