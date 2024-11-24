@@ -8,7 +8,7 @@ Do `circle-lang <file-name>` to interpret a file.
 - CMake >= 3.28
 - clang >= 18.1.2
 - ninja >= 1.11
-- vcpkg
+- [vcpkg](https://learn.microsoft.com/en-us/vcpkg/get_started/get-started?pivots=shell-basj)
 
 ### Steps
 - Choose your c/c++ compiler with environment variables `CC` and `CXX`. E.g.
