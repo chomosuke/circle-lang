@@ -191,6 +191,35 @@ namespace number {
 
     const std::vector<BigInt>& Value::get_denominator() const { return m_denominator; }
 
+    std::optional<BigInt> get_ratio(const BigInt& x, const BigInt& y) {
+        if (y == 0 || x % y != 0) {
+            return std::nullopt;
+        }
+        return x / y;
+    }
+
+    std::optional<BigInt> Value::div_pi() const {
+        const auto& num = get_numerator();
+        const auto& den = get_denominator();
+        if (num.empty()) {
+            return 0;
+        }
+        if (num[0] != 0 || num.size() != den.size() + 1) {
+            return std::nullopt;
+        }
+
+        auto ratio = get_ratio(num.back(), den.back());
+        if (!ratio) {
+            return std::nullopt;
+        }
+        for (int i = 0; i < den.size(); i++) {
+            if (ratio != get_ratio(num[i + 1], den[i])) {
+                return std::nullopt;
+            }
+        }
+        return ratio;
+    }
+
     std::optional<std::string> Value::to_letters() const {
         if (m_numerator.size() == 0) {
             return std::nullopt;
@@ -520,13 +549,6 @@ namespace number {
     }
 
     std::size_t Index::hash() const { return m_hash; }
-
-    std::optional<BigInt> get_ratio(const BigInt& x, const BigInt& y) {
-        if (x % y != 0) {
-            return std::nullopt;
-        }
-        return x / y;
-    }
 
     bool Index::operator==(const Index& rhs) const {
         assert(m_length == rhs.m_length);

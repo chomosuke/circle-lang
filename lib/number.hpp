@@ -48,7 +48,7 @@ namespace number {
 
         [[nodiscard]] const std::vector<BigInt>& get_numerator() const;
         [[nodiscard]] const std::vector<BigInt>& get_denominator() const;
-        [[nodiscard]] std::optional<std::vector<BigInt>> divide() const;
+        [[nodiscard]] std::optional<BigInt> div_pi() const;
         [[nodiscard]] std::optional<std::string> to_letters() const;
         [[nodiscard]] std::string to_string() const;
         [[nodiscard]] bool to_bool() const;

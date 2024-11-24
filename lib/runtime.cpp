@@ -173,7 +173,7 @@ namespace runtime {
 #ifdef DEBUG_OUTPUT
         std::cout << "Eval index " << diag::to_string(ind_num->get_value()) << '\n';
 #endif
-        return arr->index(ind_num->get_value());
+        return arr->index(ind_num->get_value())->evaluate(gca);
     }
     std::unique_ptr<Obj> Index::clone() const { return clone_specialize(); }
     std::unique_ptr<Index> Index::clone_specialize() const {
@@ -354,7 +354,14 @@ namespace runtime {
         if (num == nullptr) {
             throw diag::RuntimeError{.msg{"(std_output_char) isn't a number."}};
         }
-        out << num->get_value().to_string();
+        auto c = num->get_value().div_pi();
+        if (!c) {
+            throw diag::RuntimeError{.msg{"(std_output_char) isn't a multiple of pi."}};
+        }
+        if (*c < 0 || *c > CHAR_MAX) {
+            throw diag::RuntimeError{.msg{"(std_output_char) isn't within the range of ascii value."}};
+        }
+        out << static_cast<char>(c->to_int());
     }
     [[nodiscard]] std::unique_ptr<Obj> StdOutput::evaluate(const Array& /*gca*/) const {
         return clone();

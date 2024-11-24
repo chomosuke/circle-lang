@@ -8,5 +8,5 @@ TEST(Interpret, HelloWorld) {
     std::stringstream err{};
     interpret(sample_programs::HELLO_WORLD, in, out, err);
     EXPECT_EQ(err.str(), "");
-    EXPECT_EQ(out.str(), "Hello world\n");
+    EXPECT_EQ(out.str(), "Hello world!\n");
 }
