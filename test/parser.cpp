@@ -54,7 +54,7 @@ TEST(Parse, DeDoubleBracket_HelloWorld) {
 
     auto range_2nd_inner_array =
         std::get<de_double_bracket::Node>(debracketed.elements[3][4].t).elements[7][0].range;
-    EXPECT_EQ(range_2nd_inner_array.to_string(), "46:2-53:3");
+    EXPECT_EQ(range_2nd_inner_array.to_string(), "40:2-47:3");
 }
 
 TEST(Parse, DeDoubleBracket_MissingClosingBrackets) {
@@ -187,7 +187,7 @@ TEST(Parse, DeSingleBracket_HelloWorld) {
             std::get<de_bracket::DoubleBracket>(debracketed.elements[3][2].t).elements[7][0].t)
             .elements[1][0]
             .range;
-    EXPECT_EQ(range_1st_charstd_output.to_string(), "49:3-49:19");
+    EXPECT_EQ(range_1st_charstd_output.to_string(), "43:3-43:19");
 }
 
 TEST(Parse, DeBracket_MissingClosingBrackets) {

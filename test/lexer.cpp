@@ -33,7 +33,7 @@ TEST(Lex, HelloWorld) {
     EXPECT_TRUE(diags.empty());
 
     EXPECT_EQ(tokens_to_string(hello_world), sample_programs::HELLO_WORLD_TOKEN);
-    EXPECT_EQ(hello_world[hello_world.size() - 9].range.to_string(), "65:2-65:12");
+    EXPECT_EQ(hello_world[hello_world.size() - 9].range.to_string(), "56:2-56:12");
 }
 
 TEST(Lex, AllOperators) {

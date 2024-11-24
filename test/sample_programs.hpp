@@ -14,15 +14,9 @@ namespace sample_programs {
 	((
 		( (V) )(Not_found_len);
 
-		( (V) )(Temp1) := ( (V) )(Array)(0);
-		( (V) )(Temp2) := ( (V) )(Array)( ( (V) )(I) );
-
 		( (V) )(Array)(0) := 0;
 		( (V) )(Array)( ( (V) )(I) ) := 1;
 		( (V) )(Not_found_len) := ( (V) )(Array)(0) != 1;
-
-		( (V) )(Array)(0) := ( (V) )(Temp1);
-		( (V) )(Array)( ( (V) )(I) ) := ( (V) )(Temp2);
 
 		( (V) )(I) := ( (V) )(I) + 1;
 	));
@@ -55,9 +49,6 @@ namespace sample_programs {
 		( (V) )(I) := ( (V) )(I) + 1;
 	));
 
-	(std_output_char) := 10;
-	(std_output);
-
 	( (V) ) := 0;
 	(V) := (V) - 1*1;
 ));
@@ -81,13 +72,9 @@ namespace sample_programs {
 ( ( V ) )( I ) := {0 1}{1};
 ((
 ( ( V ) )( Not_found_len );
-( ( V ) )( 1Temp ) := ( ( V ) )( Array )( {}{1} );
-( ( V ) )( 2Temp ) := ( ( V ) )( Array )( ( ( V ) )( I ) );
 ( ( V ) )( Array )( {}{1} ) := {}{1};
 ( ( V ) )( Array )( ( ( V ) )( I ) ) := {0 1}{1};
 ( ( V ) )( Not_found_len ) := ( ( V ) )( Array )( {}{1} ) != {0 1}{1};
-( ( V ) )( Array )( {}{1} ) := ( ( V ) )( 1Temp );
-( ( V ) )( Array )( ( ( V ) )( I ) ) := ( ( V ) )( 2Temp );
 ( ( V ) )( I ) := ( ( V ) )( I ) + {0 1}{1};
 ));
 ( ( V ) )( I ) := ( ( V ) )( I ) - {0 1}{1};
@@ -112,8 +99,6 @@ namespace sample_programs {
 ( _outputstd );
 ( ( V ) )( I ) := ( ( V ) )( I ) + {0 1}{1};
 ));
-( _charstd_output ) := {0 10}{1};
-( _outputstd );
 ( ( V ) ) := {}{1};
 ( V ) := ( V ) - {0 1}{1} * {0 1}{1};
 ));
@@ -147,13 +132,9 @@ namespace sample_programs {
     ( ( V ) )( I ) := {0 1}{1}
     ((
         ( ( V ) )( Not_found_len )
-        ( ( V ) )( 1Temp ) := ( ( V ) )( Array )( {}{1} )
-        ( ( V ) )( 2Temp ) := ( ( V ) )( Array )( ( ( V ) )( I ) )
         ( ( V ) )( Array )( {}{1} ) := {}{1}
         ( ( V ) )( Array )( ( ( V ) )( I ) ) := {0 1}{1}
         ( ( V ) )( Not_found_len ) := ( ( V ) )( Array )( {}{1} ) != {0 1}{1}
-        ( ( V ) )( Array )( {}{1} ) := ( ( V ) )( 1Temp )
-        ( ( V ) )( Array )( ( ( V ) )( I ) ) := ( ( V ) )( 2Temp )
         ( ( V ) )( I ) := ( ( V ) )( I ) + {0 1}{1}
     ))
     ( ( V ) )( I ) := ( ( V ) )( I ) - {0 1}{1}
@@ -177,8 +158,6 @@ namespace sample_programs {
         ( _outputstd )
         ( ( V ) )( I ) := ( ( V ) )( I ) + {0 1}{1}
     ))
-    ( _charstd_output ) := {0 10}{1}
-    ( _outputstd )
     ( ( V ) ) := {}{1}
     ( V ) := ( V ) - {0 1}{1} * {0 1}{1}
 ))
@@ -213,13 +192,9 @@ namespace sample_programs {
     [[[( [( V )] )]( I )] := {0 1}{1}]
     ((
         [[( [( V )] )]( Not_found_len )]
-        [[[( [( V )] )]( 1Temp )] := [[[( [( V )] )]( Array )]( {}{1} )]]
-        [[[( [( V )] )]( 2Temp )] := [[[( [( V )] )]( Array )]( [[( [( V )] )]( I )] )]]
         [[[[( [( V )] )]( Array )]( {}{1} )] := {}{1}]
         [[[[( [( V )] )]( Array )]( [[( [( V )] )]( I )] )] := {0 1}{1}]
         [[[( [( V )] )]( Not_found_len )] := [[[[( [( V )] )]( Array )]( {}{1} )] != {0 1}{1}]]
-        [[[[( [( V )] )]( Array )]( {}{1} )] := [[( [( V )] )]( 1Temp )]]
-        [[[[( [( V )] )]( Array )]( [[( [( V )] )]( I )] )] := [[( [( V )] )]( 2Temp )]]
         [[[( [( V )] )]( I )] := [[[( [( V )] )]( I )] + {0 1}{1}]]
     ))
     [[[( [( V )] )]( I )] := [[[( [( V )] )]( I )] - {0 1}{1}]]
@@ -243,8 +218,6 @@ namespace sample_programs {
         [( _outputstd )]
         [[[( [( V )] )]( I )] := [[[( [( V )] )]( I )] + {0 1}{1}]]
     ))
-    [[( _charstd_output )] := {0 10}{1}]
-    [( _outputstd )]
     [[( [( V )] )] := {}{1}]
     [[( V )] := [[( V )] - [{0 1}{1} * {0 1}{1}]]]
 ))]
