@@ -1,3 +1,4 @@
+#include "lib/config.hpp"
 #include "lib/interpret.hpp"
 #include <boost/program_options.hpp>
 #include <fstream>
@@ -45,5 +46,5 @@ int main(int argc, char* argv[]) {
     src_code_s << src_file.rdbuf();
     std::string src_code = src_code_s.str();
 
-    interpret(src_code, std::cin, std::cout, std::cerr);
+    interpret(src_code, std::cin, std::cout, std::cerr, Config{.debug{true}});
 }

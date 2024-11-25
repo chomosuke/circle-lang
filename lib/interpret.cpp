@@ -1,14 +1,15 @@
 #include "interpret.hpp"
 
 #include "diagnostic.hpp"
+#include "config.hpp"
 #include "parser.hpp"
 #include "runtime.hpp"
 
 #include <ostream>
 #include <string>
 
-void interpret(const std::string& src_code, std::istream& in, std::ostream& out,
-               std::ostream& err) {
+void interpret(const std::string& src_code, std::istream& in, std::ostream& out, std::ostream& err,
+               const Config& config) {
     auto diags = diag::Diags();
     auto parsed = parse(src_code, diags);
     if (!diags.empty()) {
@@ -18,6 +19,11 @@ void interpret(const std::string& src_code, std::istream& in, std::ostream& out,
         }
     }
 
-    auto runtime = runtime::Runtime(std::move(*parsed));
-    runtime.run(in, out, err);
+    if (config.debug) {
+        auto runtime = runtime::Runtime<true>(std::move(*parsed));
+        runtime.run(in, out, err);
+    } else {
+        auto runtime = runtime::Runtime<false>(std::move(*parsed));
+        runtime.run(in, out, err);
+    }
 }
