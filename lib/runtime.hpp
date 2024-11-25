@@ -21,9 +21,9 @@ namespace runtime {
 
       public:
         Obj(const Obj&) = delete;
-        Obj(Obj&&) = delete;
+        Obj(Obj&&) = default;
         Obj& operator=(const Obj&) = delete;
-        Obj& operator=(Obj&&) = delete;
+        Obj& operator=(Obj&&) = default;
         virtual ~Obj() = default;
 
         explicit Obj(std::optional<diag::Range> range);
@@ -132,22 +132,29 @@ namespace runtime {
         [[nodiscard]] std::unique_ptr<Obj> clone() const override;
     };
 
-    class StdInput : public Obj {
+    template <typename T> class StdFun : public Obj {
       public:
-        StdInput();
-
-        void execute(Array& gca, std::istream& in, std::ostream& out) override;
-        [[nodiscard]] std::unique_ptr<Obj> evaluate(const Array& gca) const override;
-        [[nodiscard]] std::unique_ptr<Obj> clone() const override;
+        // NOLINTNEXTLINE(bugprone-crtp-constructor-accessibility)
+        StdFun() : Obj(std::nullopt) {}
+        [[nodiscard]] std::unique_ptr<Obj> evaluate(const Array& /*gca*/) const override {
+            return clone();
+        }
+        [[nodiscard]] std::unique_ptr<Obj> clone() const override { return std::make_unique<T>(); }
     };
 
-    class StdOutput : public Obj {
+    class StdInput : public StdFun<StdInput> {
       public:
-        StdOutput();
-
         void execute(Array& gca, std::istream& in, std::ostream& out) override;
-        [[nodiscard]] std::unique_ptr<Obj> evaluate(const Array& gca) const override;
-        [[nodiscard]] std::unique_ptr<Obj> clone() const override;
+    };
+
+    class StdOutput : public StdFun<StdOutput> {
+      public:
+        void execute(Array& gca, std::istream& in, std::ostream& out) override;
+    };
+
+    class StdDecompose : public StdFun<StdDecompose> {
+      public:
+        void execute(Array& gca, std::istream& in, std::ostream& out) override;
     };
 
     class Runtime {

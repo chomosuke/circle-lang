@@ -4,7 +4,7 @@ namespace sample_programs {
     constexpr auto HELLO_WORLD = R"((S);
 (V) := V_a;
 
-# ((array)) -> len
+# ((Array)) -> len
 (F_len) := ((
 	( (V) + 1*1 );
 	(V) := (V) + 1*1;
@@ -28,7 +28,7 @@ namespace sample_programs {
 	(V) := (V) - 1*1;
 ));
 
-# ((str))
+# ((Str))
 (F_print_str) := ((
 	( (V) + 1*1 );
 	(V) := (V) + 1*1;
@@ -64,7 +64,7 @@ namespace sample_programs {
     constexpr auto HELLO_WORLD_TOKEN =
         R"(( S );
 ( V ) := V_a;
-# ((array)) -> len
+# ((Array)) -> len
 ( F_len ) := ((
 ( ( V ) + {0 1}{1} * {0 1}{1} );
 ( V ) := ( V ) + {0 1}{1} * {0 1}{1};
@@ -82,7 +82,7 @@ namespace sample_programs {
 ( ( V ) ) := {}{1};
 ( V ) := ( V ) - {0 1}{1} * {0 1}{1};
 ));
-# ((str))
+# ((Str))
 ( F_print_str ) := ((
 ( ( V ) + {0 1}{1} * {0 1}{1} );
 ( V ) := ( V ) + {0 1}{1} * {0 1}{1};

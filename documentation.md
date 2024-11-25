@@ -74,6 +74,14 @@ way:
     - Divide `(std_output_char)` by $\pi$ and print it out as an ASCII
       character.
     - `(std_output_char) := 10; (std_output);` will print `\n`.
+  - `(std_decompose)`
+    - Transform store the coefficients of `(std_decompose_number)` in
+      `(std_decompose_numerator)` and `(std_decompose_denominator)`
+      respectively.
+    - E.g.: if `(std_decompose_number)` = $(1 + 2 \times \pi)/(3 + 4 \times
+      \pi)$, then after running `(std_decompose)`, `(std_decompose_numerator)`
+      will be `((1 / 1; 2 / 1))` and `(std_decompose_denominator)` will be
+      `((3 / 1; 4 / 1))`.
 - The source file are implicitly wrapped in a `(())`, turning it into an array
   which are then executed when the source file is interpreted.
 

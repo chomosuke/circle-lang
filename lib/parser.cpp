@@ -334,10 +334,12 @@ namespace ast {
         return irs;
     }
 
-    std::optional<Node<OperatorUnary>> parse_unary(std::vector<IRBNA>::iterator& ir,
+    std::optional<Node<OperatorUnary>> parse_unary(diag::WithInfo<number::op::Unary> op,
+                                                   std::vector<IRBNA>::iterator& ir,
                                                    std::vector<IRBNA>::iterator irs_end,
                                                    diag::Diags& diags) {
         auto ops = std::vector<diag::WithInfo<number::op::Unary>>();
+        ops.push_back(op);
         for (; ir != irs_end; ir++) {
             auto node = std::optional<Node<Any>>();
             auto early_return = std::visit(
@@ -350,6 +352,7 @@ namespace ast {
                                                            diag::to_string(t.kind))}});
                         return true;
                     } else if constexpr (std::is_same_v<T, token::OperatorUnary>) {
+                        ops.emplace_back(ir->range, t.kind);
                     } else if constexpr (std::is_same_v<T, Array> || std::is_same_v<T, Assign> ||
                                          std::is_same_v<T, Index> || std::is_same_v<T, Number>) {
                         node = Node<Any>{.range{ir->range},
@@ -364,7 +367,6 @@ namespace ast {
                 return std::nullopt;
             }
             if (node) {
-                assert(!ops.empty());
                 auto op = Node<OperatorUnary>{
                     .range{.start{ops.back().range.start}, .end{node->range.end}},
                     .t{std::make_unique<OperatorUnary>(
@@ -376,10 +378,14 @@ namespace ast {
                         .t{std::make_unique<OperatorUnary>(
                             OperatorUnary{.kind{ops.back().t},
                                           .rhs{convert_node<OperatorUnary, Any>(std::move(op))}})}};
+                    ops.pop_back();
                 }
                 return op;
             }
         }
+        diags.insert({.level{diag::error},
+                      .range{ops.back().range},
+                      .message{"Expected operand following unary operator"}});
         return std::nullopt;
     }
 
@@ -410,7 +416,9 @@ namespace ast {
                         operator_ = std::make_optional<diag::WithInfo<number::op::Binary>>(
                             {.range{ir->range}, .t{t.kind}});
                     } else if constexpr (std::is_same_v<T, token::OperatorUnary>) {
-                        auto unary = parse_unary(ir, irs.end(), diags);
+                        auto op = diag::WithInfo<number::op::Unary>{.range{ir->range}, .t{t.kind}};
+                        ir++;
+                        auto unary = parse_unary(op, ir, irs.end(), diags);
                         if (unary) {
                             operand = convert_node<OperatorUnary, Any>(std::move(*unary));
                         } else {

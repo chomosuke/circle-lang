@@ -316,6 +316,19 @@ TEST(Parse, Parse_HelloWorld) {
     std::stringstream ss;
     auto diags = diag::Diags();
     auto ast = parse(sample_programs::HELLO_WORLD, diags);
+    EXPECT_TRUE(diags.empty());
     ast::print(ss, std::move(*ast));
     EXPECT_EQ(ss.str(), sample_programs::HELLO_WORLD_AST);
+}
+
+TEST(Parse, Parse_Unary) {
+    std::stringstream ss;
+    auto diags = diag::Diags();
+    auto ast = parse("! ! !((1 + 2))(0)", diags);
+    EXPECT_TRUE(diags.empty());
+    ast::print(ss, std::move(*ast));
+    EXPECT_EQ(ss.str(), "\n"
+                        "[! [! [! [((\n"
+                        "    [{0 1}{1} + {0 2}{1}]\n"
+                        "))( {}{1} )]]]]\n");
 }

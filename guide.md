@@ -23,8 +23,7 @@ follows:
 - Prefix your function name with `F_`.
 - Store return value in `(R)`.
 - Use `(S)` as the starting boolean variable for simulating if with while
-  loop. Set it to 1 before every single run while loop, including function
-  calls.
+  loop.
 
 ## Dynamic array
 - Use an array of two elements, the first element being the length, the second

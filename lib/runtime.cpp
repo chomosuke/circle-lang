@@ -6,7 +6,7 @@
 #include <iostream>
 #include <variant>
 
-// #define DEBUG_OUTPUT
+#define DEBUG_OUTPUT
 
 namespace runtime {
     std::unique_ptr<Obj> from_ast(ast::Node<ast::Any>&& node) {
@@ -327,7 +327,6 @@ namespace runtime {
         return std::make_unique<Number>(m_value.clone(), get_range());
     }
 
-    StdInput::StdInput() : Obj(std::nullopt) {}
     void StdInput::execute(Array& gca, std::istream& in, std::ostream& /*out*/) {
 #ifdef DEBUG_OUTPUT
         std::cout << "Exe std_input" << '\n';
@@ -337,14 +336,7 @@ namespace runtime {
         loc.emplace_back(diag::Range{}, number::Value("std_input_char"));
         gca.insert(std::move(loc), std::make_unique<Number>(number::Value(chr), std::nullopt));
     }
-    [[nodiscard]] std::unique_ptr<Obj> StdInput::evaluate(const Array& /*gca*/) const {
-        return clone();
-    }
-    [[nodiscard]] std::unique_ptr<Obj> StdInput::clone() const {
-        return std::make_unique<StdInput>();
-    }
 
-    StdOutput::StdOutput() : Obj(std::nullopt) {}
     void StdOutput::execute(Array& gca, std::istream& /*in*/, std::ostream& out) {
 #ifdef DEBUG_OUTPUT
         std::cout << "Exe std_output" << '\n';
@@ -359,15 +351,37 @@ namespace runtime {
             throw diag::RuntimeError{.msg{"(std_output_char) isn't a multiple of pi."}};
         }
         if (*c < 0 || *c > CHAR_MAX) {
-            throw diag::RuntimeError{.msg{"(std_output_char) isn't within the range of ascii value."}};
+            throw diag::RuntimeError{
+                .msg{"(std_output_char) isn't within the range of ascii value."}};
         }
         out << static_cast<char>(c->to_int());
     }
-    [[nodiscard]] std::unique_ptr<Obj> StdOutput::evaluate(const Array& /*gca*/) const {
-        return clone();
-    }
-    [[nodiscard]] std::unique_ptr<Obj> StdOutput::clone() const {
-        return std::make_unique<StdOutput>();
+
+    void StdDecompose::execute(Array& gca, std::istream& /*in*/, std::ostream& /*out*/) {
+        auto num = gca.index(number::Value("std_decompose_number"));
+        const auto& number = dynamic_cast<Number*>(num.get())->get_value();
+        auto numerator = Array(static_cast<int>(number.get_numerator().size()), std::nullopt);
+        for (auto i = 0; i < number.get_numerator().size(); i++) {
+            auto loc = std::vector<diag::WithInfo<number::Value>>();
+            loc.emplace_back(diag::Range{}, number::Value(BigInt(i)));
+            numerator.insert(
+                std::move(loc),
+                std::make_unique<Number>(number::Value(number.get_numerator()[i]), std::nullopt));
+        }
+        auto loc = std::vector<diag::WithInfo<number::Value>>();
+        loc.emplace_back(diag::Range{}, number::Value("std_decompose_numerator"));
+        gca.insert(std::move(loc), std::make_unique<Array>(std::move(numerator)));
+        auto denominator = Array(static_cast<int>(number.get_denominator().size()), std::nullopt);
+        for (auto i = 0; i < number.get_denominator().size(); i++) {
+            auto loc = std::vector<diag::WithInfo<number::Value>>();
+            loc.emplace_back(diag::Range{}, number::Value(BigInt(i)));
+            denominator.insert(
+                std::move(loc),
+                std::make_unique<Number>(number::Value(number.get_denominator()[i]), std::nullopt));
+        }
+        loc = std::vector<diag::WithInfo<number::Value>>();
+        loc.emplace_back(diag::Range{}, number::Value("std_decompose_denominator"));
+        gca.insert(std::move(loc), std::make_unique<Array>(std::move(denominator)));
     }
 
     Runtime::Runtime(ast::Array&& code)
@@ -383,6 +397,9 @@ namespace runtime {
         loc = std::vector<diag::WithInfo<number::Value>>();
         loc.emplace_back(diag::Range{}, number::Value("std_output"));
         m_gca.insert(std::move(loc), std::make_unique<StdOutput>());
+        loc = std::vector<diag::WithInfo<number::Value>>();
+        loc.emplace_back(diag::Range{}, number::Value("std_decompose"));
+        m_gca.insert(std::move(loc), std::make_unique<StdDecompose>());
     }
 
     void Runtime::run(std::istream& in, std::ostream& out, std::ostream& err) {
