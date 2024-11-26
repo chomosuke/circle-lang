@@ -542,6 +542,10 @@ namespace number {
 
     Index Index::make_ref(const Value& value, int length) { return {value, length}; }
 
+    const Value& Index::get_value() const {
+        return get_const_ref(m_value);
+    }
+
     Index Index::clone() const {
         return {std::get<Value>(m_value)
                     .clone(), // cloning a const reference index is probably lifetime violation

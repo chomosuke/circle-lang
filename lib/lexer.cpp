@@ -298,6 +298,7 @@ std::optional<std::vector<token::Token>> lex(std::string_view src_code, diag::Di
             return std::nullopt;
         }
         if (c == '\n') {
+            // TODO warn about missing semicolon
             range.end.column = 0;
             range.end.line++;
         } else {

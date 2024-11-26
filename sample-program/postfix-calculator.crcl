@@ -1,54 +1,55 @@
-(S);
-(V) := V_a;
+(S)
+; (V) := V_a
+; ( (V) ) := ((0))
 
 # ((Array)) -> len
-(F_len) := ((
-	( (V) + 1*1 );
-	(V) := (V) + 1*1;
+; (F_len) := ((
+	( (V) + 1*1 )
+	; (V) := (V) + 1*1
 
 	# loop
-	( (V) )(I) := 1;
-	((
-		( (V) )(Not_found_len);
+	; ( (V) )(I) := 1
+	; ((
+		( (V) )(Not_found_len)
 
-		( (V) )(Array)(0) := 0;
-		( (V) )(Array)( ( (V) )(I) ) := 1;
-		( (V) )(Not_found_len) := ( (V) )(Array)(0) != 1;
+		; ( (V) )(Array)(0) := 0
+		; ( (V) )(Array)( ( (V) )(I) ) := 1
+		; ( (V) )(Not_found_len) := ( (V) )(Array)(0) != 1
 
-		( (V) )(I) := ( (V) )(I) + 1;
-	));
+		; ( (V) )(I) := ( (V) )(I) + 1
+	))
 
-	( (V) )(I) := ( (V) )(I) - 1;
+	; ( (V) )(I) := ( (V) )(I) - 1
 
-	(R) := ( (V) )(I);
-	( (V) ) := 0;
-	(V) := (V) - 1*1;
-));
+	; (R) := ( (V) )(I)
+	; ( (V) ) := 0
+	; (V) := (V) - 1*1
+))
 
 # ((Str))
-(F_print_str) := ((
-	( (V) + 1*1 );
-	(V) := (V) + 1*1;
+; (F_print_str) := ((
+	( (V) + 1*1 )
+	; (V) := (V) + 1*1
 
-	( (V) + 1*1 ) := ((0));
-	( (V) + 1*1 )(Array) := ( (V) )(Str);
-	(F_len);
-	( (V) )(Len) := (R);
+	; ( (V) + 1*1 ) := ((0))
+	; ( (V) + 1*1 )(Array) := ( (V) )(Str)
+	; (F_len)
+	; ( (V) )(Len) := (R)
 
 	# loop
-	( (V) )(I) := 0;
-	((
-		( (V) )(I) < ( (V) )(Len);
+	; ( (V) )(I) := 0
+	; ((
+		( (V) )(I) < ( (V) )(Len)
 
-		(std_output_char) := ( (V) )(Str)( ( (V) )(I) ) * 1;
-		(std_output);
+		; (std_output_char) := ( (V) )(Str)( ( (V) )(I) ) * 1
+		; (std_output)
 
-		( (V) )(I) := ( (V) )(I) + 1;
-	));
+		; ( (V) )(I) := ( (V) )(I) + 1
+	))
 
-	( (V) ) := 0;
-	(V) := (V) - 1*1;
-));
+	; ( (V) ) := 0
+	; (V) := (V) - 1*1
+))
 
 # Typedef:
 # vec
@@ -56,307 +57,360 @@
 # - Elems: array of length 1
 
 # (()) -> vec
-(F_vec_create) := ((
-	( (V) + 1*1 );
-	(V) := (V) + 1*1;
+; (F_vec_create) := ((
+	( (V) + 1*1 )
+	; (V) := (V) + 1*1
 
-	(R) := ((0));
-	(R)(Size) := 0;
-	(R)(Elems) := ((0))
+	; (R) := ((0))
+	; (R)(Size) := 0
+	; (R)(Elems) := ((0))
 
-	( (V) ) := 0;
-	(V) := (V) - 1*1;
-));
+	; ( (V) ) := 0
+	; (V) := (V) - 1*1
+))
 
 # ((Vec; Elem)) -> vec
-(F_vec_push) := ((
-	( (V) + 1*1 );
-	(V) := (V) + 1*1;
+; (F_vec_push) := ((
+	( (V) + 1*1 )
+	; (V) := (V) + 1*1
 
-	( (V) )(Vec)(Elems)( ( (V) )(Vec)(Size) ) := ( (V) )(Elem);
-	( (V) )(Vec)(Size) := ( (V) )(Vec)(Size) + 1*1;
+	; ( (V) )(Vec)(Elems)( ( (V) )(Vec)(Size) ) := ( (V) )(Elem)
+	; ( (V) )(Vec)(Size) := ( (V) )(Vec)(Size) + 1*1
 
-	(R) := ( (V) )(Vec);
+	; (R) := ( (V) )(Vec)
 
-	( (V) ) := 0;
-	(V) := (V) - 1*1;
-));
+	; ( (V) ) := 0
+	; (V) := (V) - 1*1
+))
 
 # ((Vec)) -> ((Vec; Elem))
-(F_vec_pop) := ((
-	( (V) + 1*1 );
-	(V) := (V) + 1*1;
+; (F_vec_pop) := ((
+	( (V) + 1*1 )
+	; (V) := (V) + 1*1
 
-	( (V) )(Vec)(Size) := ( (V) )(Vec)(Size) - 1*1;
+	; ( (V) )(Vec)(Size) := ( (V) )(Vec)(Size) - 1*1
 
-	(R) := ((0));
-	(R)(Vec) := ( (V) )(Vec);
-	(R)(Elem) := ( (V) )(Vec)(Elems)( ( (V) )(Vec)(Size) );
+	; (R) := ((0))
+	; (R)(Vec) := ( (V) )(Vec)
+	; (R)(Elem) := ( (V) )(Vec)(Elems)( ( (V) )(Vec)(Size) )
 
-	( (V) ) := 0;
-	(V) := (V) - 1*1;
-));
+	; ( (V) ) := 0
+	; (V) := (V) - 1*1
+))
 
 # ((Array)) -> vec
-(F_to_vec) := ((
-	( (V) + 1*1 );
-	(V) := (V) + 1*1;
+; (F_to_vec) := ((
+	( (V) + 1*1 )
+	; (V) := (V) + 1*1
 
-	( (V) + 1*1 ) := ((0));
-	(F_vec_create);
-	( (V) )(Vec) := (R);
+	; ( (V) + 1*1 ) := ((0))
+	; (F_vec_create)
+	; ( (V) )(Vec) := (R)
 
-	( (V) + 1*1 ) := ((0));
-	( (V) + 1*1 )(Array) := ( (V) )(Array);
-	(F_len);
-	( (V) )(Len) := (R);
+	; ( (V) + 1*1 ) := ((0))
+	; ( (V) + 1*1 )(Array) := ( (V) )(Array)
+	; (F_len)
+	; ( (V) )(Len) := (R)
 
-	( (V) )(I) := 0;
+	; ( (V) )(I) := 0
 
 	# loop
-	((
-		( (V) )(I) < ( (V) )(Len);
+	; ((
+		( (V) )(I) < ( (V) )(Len)
 
-		( (V) + 1*1 ) := ((0));
-		( (V) + 1*1 )(Vec) := ( (V) )(Vec);
-		( (V) + 1*1 )(Elem) := ( (V) )(Array)( ( (V) )(I) );
-		(F_vec_push);
-		( (V) )(Vec) := (R);
+		; ( (V) + 1*1 ) := ((0))
+		; ( (V) + 1*1 )(Vec) := ( (V) )(Vec)
+		; ( (V) + 1*1 )(Elem) := ( (V) )(Array)( ( (V) )(I) )
+		; (F_vec_push)
+		; ( (V) )(Vec) := (R)
 
-		( (V) )(I) := ( (V) )(I) + 1;
-	));
+		; ( (V) )(I) := ( (V) )(I) + 1
+	))
 
-	(R) := ( (V) )(Vec);
+	; (R) := ( (V) )(Vec)
 
-	( (V) ) := 0;
-	(V) := (V) - 1*1;
-));
+	; ( (V) ) := 0
+	; (V) := (V) - 1*1
+))
 
 # (()) -> token_vec
-(F_read_token) := ((
-	( (V) + 1*1 );
-	(V) := (V) + 1*1;
+; (F_read_token) := ((
+	( (V) + 1*1 )
+	; (V) := (V) + 1*1
 
-	( (V) + 1*1 ) := ((0));
-	(F_vec_create);
-	( (V) )(Token) := (R);
+	; ( (V) + 1*1 ) := ((0))
+	; (F_vec_create)
+	; ( (V) )(Token) := (R)
 
-	(std_input);
+	; (std_input)
 	# loop
-	((
+	; ((
 		(std_input_char) = 9  || # TAB
 		(std_input_char) = 10 || # \n
 		(std_input_char) = 13 || # \r
-		(std_input_char) = 32;   # SPACE
+		(std_input_char) = 32   # SPACE
 
-		(std_input);
-	));
+		; (std_input)
+	))
 
 	# loop
-	((
+	; ((
 		(std_input_char) != 9  && # TAB
 		(std_input_char) != 10 && # \n
 		(std_input_char) != 13 && # \r
-		(std_input_char) != 32;   # SPACE
+		(std_input_char) != 32   # SPACE
 
-		( (V) + 1*1 ) := ((0));
-		( (V) + 1*1 )(Vec) := ( (V) )(Token);
-		( (V) + 1*1 )(Elem) := (std_input_char);
-		(F_vec_push);
-		( (V) )(Token) := (R);
+		; ( (V) + 1*1 ) := ((0))
+		; ( (V) + 1*1 )(Vec) := ( (V) )(Token)
+		; ( (V) + 1*1 )(Elem) := (std_input_char)
+		; (F_vec_push)
+		; ( (V) )(Token) := (R)
 
-		(std_input);
+		; (std_input)
 	))
 
-	(R) := ( (V) )(Token);
+	; (R) := ( (V) )(Token)
 
-	( (V) ) := 0;
-	(V) := (V) - 1*1;
-));
-
-# (())
-(F_ill_formed) := ((
-	( (V) + 1*1 );
-	(V) := (V) + 1*1;
-
-	( (V) + 1*1 ) := ((0));
-	( (V) + 1*1 )(Str) := ((I; l; l; 32 / 1; f; o; r; m; e; d; 32 / 1; e; q; u; a; t; i; o; n; 46 / 1; 10))
-	(F_print_str);
-
-	( (V) ) := 0;
-	(V) := (V) - 1*1;
-));
-
-# ((Str: vec)) -> ((Num: x*pi, Success: bool))
-(F_atoi) := ((
-	( (V) + 1*1 );
-	(V) := (V) + 1*1;
-
-	( (V) )(Success) := 1;
-	( (V) )(Num) := 0;
-
-	( (V) )(I) := 0;
-	((
-		( (V) )(Success) && ( (V) )(I) < ( (V) )(Str)(Size);
-
-		(S) := ( (V) )(Str)( ( (V) )(I) ) < 48 && 57 < ( (V) )(Str)( ( (V) )(I) );
-		((
-			(S);
-			( (V) )(Success) := 0;
-			(S) := 0;
-		));
-
-		( (V) )(Num) := ( (V) )(Num) * 10 / 1 + ( (V) )(Str)( ( (V) )(I) ) - 48;
-
-		( (V) )(I) := ( (V) )(I) + 1*1;
-	));
-
-	(R) := ((0));
-	(R)(Num) := ( (V) )(Num);
-	(R)(Success) := ( (V) )(Success);
-
-	( (V) ) := 0;
-	(V) := (V) - 1*1;
-));
-
-# ((Num: positive x*pi))
-(F_print_xpi) := ((
-	( (V) + 1*1 );
-	(V) := (V) + 1*1;
-
-	( (V) + 1*1 ) := ((0));
-	(F_vec_create);
-	( (V) )(Stack) := (R);
-
-	((
-		( (V) )(Num) != 0;
-
-		( (V) )(Rem) := 0;
-		(std_decompose_number) := ( (V) )(Num) / 10 * 1 - ( (V) )(Rem) / 10 * 1;
-		(std_decompose);
-		( (V) + 1*1 ) := ((0));
-		( (V) + 1*1 )(Array) := (std_decompose_denominator);
-		(F_len);
-		( (V) )(DenLen) := (R);
-		((
-			(std_decompose_denominator)(0) != 1 || ( (V) )(DenLen) != 1;
-
-			( (V) )(Rem) := ( (V) )(Rem) + 1;
-
-			(std_decompose_number) := ( (V) )(Num) / 10 * 1 - ( (V) )(Rem) / 10 * 1;
-			(std_decompose);
-			( (V) + 1*1 ) := ((0));
-			( (V) + 1*1 )(Array) := (std_decompose_denominator);
-			(F_len);
-			( (V) )(DenLen) := (R)
-		));
-
-		( (V) )(Num) := ( (V) )(Num) / 10 * 1 - ( (V) )(Rem) / 10 * 1;
-
-		( (V) + 1*1 ) := ((0));
-		( (V) + 1*1 )(Vec) := ( (V) )(Stack);
-		( (V) + 1*1 )(Elem) := ( (V) )(Rem);
-		(F_vec_push);
-		( (V) )(Stack) := (R);
-	));
-
-	((
-		( (V) )(Stack)(Size) > 0;
-
-		( (V) + 1*1 ) := ((0));
-		( (V) + 1*1 )(Vec) := ( (V) )(Stack);
-		(F_vec_pop);
-		( (V) )(Stack) := (R)(Vec);
-		(std_output_char) := (R)(Elem) + 48;
-		(std_output);
-	))
-
-	( (V) ) := 0;
-	(V) := (V) - 1*1;
+	; ( (V) ) := 0
+	; (V) := (V) - 1*1
 ))
 
-# # ((Num)) TODO
-# (F_print_num) := ((
-# 	(std_decompose_number) := ( (V) )(Num) / 10 * 1 - ( (V) )(Rem) / 10 * 1;
-# 	(std_decompose);
-# ))
+# (())
+; (F_ill_formed) := ((
+	( (V) + 1*1 )
+	; (V) := (V) + 1*1
 
-( (V) + 1*1 ) := ((0));
-(F_vec_create);
-( (V) )(Stack) := (R);
+	; ( (V) + 1*1 ) := ((0))
+	; ( (V) + 1*1 )(Str) := ((I; l; l; 32 / 1; f; o; r; m; e; d; 32 / 1; e; q; u; a; t; i; o; n; 46 / 1; 10))
+	; (F_print_str)
 
-( (V) )(Num) := 0;
-(std_input);
-((
-	(std_input_char) != 10;
+	; ( (V) ) := 0
+	; (V) := (V) - 1*1
+))
 
-	( (V) )(IsNum) := 48 <= (std_input_char) && (std_input_char) <= 57;
+# ((Str: vec)) -> ((Num: x*pi, Success: bool))
+; (F_atoi) := ((
+	( (V) + 1*1 )
+	; (V) := (V) + 1*1
 
-	(S) := ( (V) )(IsNum);
-	((
-		(S);
-		( (V) )(Num) := ( (V) )(Num) * 10 / 1 + (std_input_char) - 48;
-		(S) := 0
-	));
-	(S) := !( (V) )(IsNum);
-	((
-		(S);
-		( (V) + 1*1 ) := ((0));
-		( (V) + 1*1 )(Vec) := ( (V) )(Stack);
-		( (V) + 1*1 )(Elem) := ( (V) )(Num);
-		(F_vec_push);
-		( (V) )(Stack) := (R);
+	; ( (V) )(Success) := 1
+	; ( (V) )(Num) := 0
 
-		( (V) )(Num) := 0;
-		(S) := 0
-	));
+	; ( (V) )(I) := 0
+	; ((
+		( (V) )(Success) && ( (V) )(I) < ( (V) )(Str)(Size)
 
-	( (V) )(F_calc) := ((
-		(S);
-		( (V) + 1*1 ) := ((0));
-		( (V) + 1*1 )(Vec) := ( (V) )(Stack);
-		(F_vec_pop);
-		( (V) )(Stack) := (R)(Vec);
-		( (V) )(Num2) := (R)(Elem);
+		; (S) := ( (V) )(Str)( ( (V) )(I) ) < 48 && 57 < ( (V) )(Str)( ( (V) )(I) )
+		; ((
+			(S)
+			; ( (V) )(Success) := 0
+			; (S) := 0
+		))
 
-		( (V) + 1*1 ) := ((0));
-		( (V) + 1*1 )(Vec) := ( (V) )(Stack);
-		(F_vec_pop);
-		( (V) )(Stack) := (R)(Vec);
-		( (V) )(Num1) := (R)(Elem);
+		; ( (V) )(Num) := ( (V) )(Num) * 10 / 1 + ( (V) )(Str)( ( (V) )(I) ) - 48
 
-		( (V) )(Op);
+		; ( (V) )(I) := ( (V) )(I) + 1*1
+	))
 
-		(S) := 0
-	));
+	; (R) := ((0))
+	; (R)(Num) := ( (V) )(Num)
+	; (R)(Success) := ( (V) )(Success)
 
-	(S) := (std_input_char) = 43;
-	( (V) )(Op) :=
-		( (V) )(Num) := ( (V) )(Num1) + (Num2);
+	; ( (V) ) := 0
+	; (V) := (V) - 1*1
+))
 
-	(S) := (std_input_char) = 45;
-	( (V) )(Op) :=
-		( (V) )(Num) := ( (V) )(Num1) - (Num2);
+# ((Num: positive x*pi))
+; (F_print_xpi) := ((
+	( (V) + 1*1 )
+	; (V) := (V) + 1*1
 
-	(S) := (std_input_char) = 42;
-	( (V) )(Op) :=
-		( (V) )(Num) := ( (V) )(Num1) * (Num2) / 1;
+	; ( (V) + 1*1 ) := ((0))
+	; (F_vec_create)
+	; ( (V) )(Stack) := (R)
 
-	(S) := (std_input_char) = 47;
-	( (V) )(Op) :=
-		( (V) )(Num) := ( (V) )(Num1) / (Num2) * 1;
+	; ((
+		( (V) )(Num) != 0
 
-	(std_input);
-));
+		; ( (V) )(Rem) := 0
+		; (std_decompose_number) := ( (V) )(Num) / 10 * 1 - ( (V) )(Rem) / 10 * 1
+		; (std_decompose)
+		; ( (V) + 1*1 ) := ((0))
+		; ( (V) + 1*1 )(Array) := (std_decompose_denominator)
+		; (F_len)
+		; ( (V) )(DenLen) := (R)
+		; ((
+			(std_decompose_denominator)(0) != 1 || ( (V) )(DenLen) != 1 && (std_decompose_number) != 0
 
-( (V) + 1*1 ) := ((0));
-( (V) + 1*1 )(Vec) := ( (V) )(Stack);
-(F_vec_pop);
-( (V) )(Stack) := (R)(Vec);
-( (V) )(Num) := (R)(Elem);
+			; ( (V) )(Rem) := ( (V) )(Rem) + 1
 
-( (V) + 1*1 ) := ((0));
-( (V) + 1*1 )(Num) := ( (V) )(Num);
-(F_print_xpi);
+			; (std_decompose_number) := ( (V) )(Num) / 10 * 1 - ( (V) )(Rem) / 10 * 1
+			; (std_decompose)
+			; ( (V) + 1*1 ) := ((0))
+			; ( (V) + 1*1 )(Array) := (std_decompose_denominator)
+			; (F_len)
+			; ( (V) )(DenLen) := (R)
+		))
 
-(S) := 0;
+		; ( (V) )(Num) := ( (V) )(Num) / 10 * 1 - ( (V) )(Rem) / 10 * 1
+
+		; ( (V) + 1*1 ) := ((0))
+		; ( (V) + 1*1 )(Vec) := ( (V) )(Stack)
+		; ( (V) + 1*1 )(Elem) := ( (V) )(Rem)
+		; (F_vec_push)
+		; ( (V) )(Stack) := (R)
+	))
+
+	; ((
+		( (V) )(Stack)(Size) > 0
+
+		; ( (V) + 1*1 ) := ((0))
+		; ( (V) + 1*1 )(Vec) := ( (V) )(Stack)
+		; (F_vec_pop)
+		; ( (V) )(Stack) := (R)(Vec)
+		; (std_output_char) := (R)(Elem) + 48
+		; (std_output)
+	))
+
+	; (std_output_char) := 10
+	; (std_output)
+
+	; ( (V) ) := 0
+	; (V) := (V) - 1*1
+))
+
+# ((Num))
+; (F_print_num) := ((
+	( (V) + 1*1 )
+	; (V) := (V) + 1*1
+
+	; (std_decompose_number) := ( (V) )(Num)
+	; (std_decompose)
+	; ( (V) )(Num) := (std_decompose_numerator)
+	; ( (V) )(Den) := (std_decompose_denominator)
+
+	; ( (V) + 1*1 ) := ((0))
+	; ( (V) + 1*1 )(Str) := (( 40/1 )) # (
+	; (F_print_str)
+
+	; ( (V) + 1*1 ) := ((0))
+	; ( (V) + 1*1 )(Array) := ( (V) )(Num)
+	; (F_len)
+	; ( (V) )(Len) := (R)
+	; ((
+		
+	))
+
+	; ( (V) + 1*1 )(Str) := (( 41/1; 47/1; 40/1 )) # )/(
+	; (F_print_str)
+
+	; ( (V) + 1*1 )(Str) := (( 41/1 )) # )
+	; (F_print_str)
+
+	; ( (V) ) := 0
+	; (V) := (V) - 1*1
+))
+
+; ( (V) + 1*1 ) := ((0))
+; (F_vec_create)
+; ( (V) )(Stack) := (R)
+
+; ( (V) )(Num) := 0
+; ( (V) )(Reading_num) := 0
+; (std_input)
+; ((
+	(std_input_char) != 10
+
+	; ( (V) )(Is_num) := 48 <= (std_input_char) && (std_input_char) <= 57
+
+	; (S) := ( (V) )(Is_num)
+	; ((
+		(S)
+		; ( (V) )(Reading_num) := 1
+		; ( (V) )(Num) := ( (V) )(Num) * 10 / 1 + (std_input_char) - 48
+		; (S) := 0
+	))
+
+	; ( (V) )(F_push_num) := ((
+		(S)
+		; ( (V) + 1*1 ) := ((0))
+		; ( (V) + 1*1 )(Vec) := ( (V) )(Stack)
+		; ( (V) + 1*1 )(Elem) := ( (V) )(Num)
+		; (F_vec_push)
+		; ( (V) )(Stack) := (R)
+
+		; ( (V) )(Num) := 0
+		; (S) := 0
+	))
+
+	; (S) := !( (V) )(Is_num) && ( (V) )(Reading_num)
+	; ((
+		(S)
+		; ( (V) )(Reading_num) := 0
+		; ( (V) )(F_push_num)
+		; (S) := 0
+	))
+
+	; ( (V) )(F_calc) := ((
+		(S)
+		; ( (V) + 1*1 ) := ((0))
+		; ( (V) + 1*1 )(Vec) := ( (V) )(Stack)
+		; (F_vec_pop)
+		; ( (V) )(Stack) := (R)(Vec)
+		; ( (V) )(Num2) := (R)(Elem)
+
+		; ( (V) + 1*1 ) := ((0))
+		; ( (V) + 1*1 )(Vec) := ( (V) )(Stack)
+		; (F_vec_pop)
+		; ( (V) )(Stack) := (R)(Vec)
+		; ( (V) )(Num1) := (R)(Elem)
+
+		; ( (V) )(Op)
+
+		; ( (V) )(F_push_num)
+
+		; (S) := 0
+	))
+
+	; (S) := (std_input_char) = 43
+	; ( (V) )(Op) :=
+		( (V) )(Num) := ( (V) )(Num1) + ( (V) )(Num2)
+	; ( (V) )(F_calc)
+
+	; (S) := (std_input_char) = 45
+	; ( (V) )(Op) :=
+		( (V) )(Num) := ( (V) )(Num1) - ( (V) )(Num2)
+	; ( (V) )(F_calc)
+
+	; (S) := (std_input_char) = 42
+	; ( (V) )(Op) :=
+		( (V) )(Num) := ( (V) )(Num1) * ( (V) )(Num2) / 1
+	; ( (V) )(F_calc)
+
+	; (S) := (std_input_char) = 47
+	; ( (V) )(Op) :=
+		( (V) )(Num) := ( (V) )(Num1) / ( (V) )(Num2) * 1
+	; ( (V) )(F_calc)
+
+	; (std_input)
+))
+
+; (S) := ( (V) )(Reading_num)
+; ((
+	(S)
+	; ( (V) )(Reading_num) := 0
+	; ( (V) )(F_push_num)
+	; (S) := 0
+))
+
+; ( (V) + 1*1 ) := ((0))
+; ( (V) + 1*1 )(Vec) := ( (V) )(Stack)
+; (F_vec_pop)
+; ( (V) )(Stack) := (R)(Vec)
+; ( (V) )(Num) := (R)(Elem)
+
+; ( (V) + 1*1 ) := ((0))
+; ( (V) + 1*1 )(Num) := ( (V) )(Num)
+; (F_print_xpi)
+
+; (S) := 0

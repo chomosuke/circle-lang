@@ -1,7 +1,7 @@
 #include "interpret.hpp"
 
-#include "diagnostic.hpp"
 #include "config.hpp"
+#include "diagnostic.hpp"
 #include "parser.hpp"
 #include "runtime.hpp"
 
@@ -20,10 +20,10 @@ void interpret(const std::string& src_code, std::istream& in, std::ostream& out,
     }
 
     if (config.debug) {
-        auto runtime = runtime::Runtime<true>(std::move(*parsed));
+        auto runtime = runtime::Runtime<true>(std::move(*parsed), src_code);
         runtime.run(in, out, err);
     } else {
-        auto runtime = runtime::Runtime<false>(std::move(*parsed));
+        auto runtime = runtime::Runtime<false>(std::move(*parsed), src_code);
         runtime.run(in, out, err);
     }
 }

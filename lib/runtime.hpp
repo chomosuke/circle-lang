@@ -1,11 +1,14 @@
 #pragma once
 
-#include "lib/diagnostic.hpp"
+#include "diagnostic.hpp"
 #include "macros.hpp"
 #include "number.hpp"
 #include "parser.hpp"
 
 #include <memory>
+#include <sstream>
+#include <string>
+#include <unordered_set>
 
 namespace runtime {
     template <bool DEBUG> class Obj;
@@ -42,7 +45,45 @@ namespace runtime {
             std::move(*node.t));
     }
 
-    template <bool DEBUG> class Debugger {};
+    inline std::vector<std::string> split(std::string s, const std::string& delimiter) {
+        std::vector<std::string> tokens;
+        size_t pos = 0;
+        std::string token;
+        while ((pos = s.find(delimiter)) != std::string::npos) {
+            token = s.substr(0, pos);
+            tokens.push_back(token);
+            s.erase(0, pos + delimiter.length());
+        }
+        tokens.push_back(s);
+
+        return tokens;
+    }
+
+    template <bool DEBUG> class Debugger {
+      private:
+        int m_arr_level{0};
+        std::optional<int> m_stepping_level{1};
+        std::unordered_set<int> m_breakpoints;
+        std::vector<std::string> m_lines;
+
+      public:
+        explicit Debugger(const std::string& src_code) {
+            if constexpr (DEBUG) {
+                m_lines = split(src_code, "\n");
+            }
+        }
+        void arr_enter() {
+            if constexpr (DEBUG) {
+                m_arr_level++;
+            }
+        }
+        void arr_exit() {
+            if constexpr (DEBUG) {
+                m_arr_level--;
+            }
+        }
+        void execute(const std::unique_ptr<Obj<DEBUG>>& obj, const Array<DEBUG>& gca);
+    };
 
     template <bool DEBUG> class Obj {
       private:
@@ -64,7 +105,7 @@ namespace runtime {
         [[nodiscard]] virtual std::unique_ptr<Obj<DEBUG>>
         evaluate(const Array<DEBUG>& gca) const = 0;
         [[nodiscard]] virtual std::unique_ptr<Obj<DEBUG>> clone() const = 0;
-        [[nodiscard]] virtual std::string to_string() const = 0;
+        [[nodiscard]] virtual std::string debug_string(int indent) const = 0;
     };
 
     inline void throw_index_non_array(diag::Range range) {
@@ -74,6 +115,11 @@ namespace runtime {
     inline void throw_index_non_number(diag::Range range) {
         throw diag::RuntimeError{.msg{
             std::format("{} Attempting to index an array with a non number.", range.to_string())}};
+    }
+    inline void print_indent(std::stringstream& ss, int indent) {
+        for (auto i = 0; i < indent; i++) {
+            ss << "    ";
+        }
     }
 
     template <bool DEBUG> class Array : public Obj<DEBUG> {
@@ -119,17 +165,25 @@ namespace runtime {
 
         void execute(Array<DEBUG>& gca, std::istream& in, std::ostream& out,
                      Debugger<DEBUG>& debugger) override {
+            debugger.arr_enter();
             const auto zero = number::Value(BigInt(0));
-            auto first = index(zero)->evaluate(gca);
+            auto obj = index(zero);
+            auto first = obj->evaluate(gca);
+            debugger.execute(obj, gca);
             auto* number = dynamic_cast<Number<DEBUG>*>(first.get());
             while (number == nullptr || !number::equal(number->get_value(), zero)) {
                 for (auto i = 1; i < m_length; i++) {
-                    index(number::Value(i))->execute(gca, in, out, debugger);
+                    auto obj = index(number::Value(i));
+                    debugger.execute(obj, gca);
+                    obj->execute(gca, in, out, debugger);
                 }
 
-                first = index(zero)->evaluate(gca);
+                auto obj = index(zero);
+                first = obj->evaluate(gca);
+                debugger.execute(obj, gca);
                 number = dynamic_cast<Number<DEBUG>*>(first.get());
             }
+            debugger.arr_exit();
         }
         [[nodiscard]] std::unique_ptr<Obj<DEBUG>> evaluate(const Array& /*gca*/) const override {
             return clone();
@@ -141,8 +195,17 @@ namespace runtime {
             }
             return na;
         }
-        [[nodiscard]] std::string to_string() const override {
-            return std::format("(( {} ))", m_length);
+        [[nodiscard]] std::string debug_string(int indent) const override {
+            auto ss = std::stringstream();
+            ss << "((\n";
+            for (const auto& [i, e] : m_elements) {
+                print_indent(ss, indent + 1);
+                ss << diag::to_string(i.get_value()) << ": " << e->debug_string(indent + 1)
+                   << ";\n";
+            }
+            print_indent(ss, indent);
+            ss << "))";
+            return ss.str();
         }
     };
 
@@ -225,11 +288,12 @@ namespace runtime {
         [[nodiscard]] std::unique_ptr<Obj<DEBUG>> clone() const override {
             return clone_specialize();
         }
-        [[nodiscard]] std::string to_string() const override {
+        [[nodiscard]] std::string debug_string(int indent) const override {
             if (m_subject) {
-                return std::format("{}( {} )", (*m_subject)->to_string(), m_index->to_string());
+                return std::format("{}( {} )", (*m_subject)->debug_string(indent),
+                                   m_index->debug_string(indent));
             } else {
-                return std::format("( {} )", m_index->to_string());
+                return std::format("( {} )", m_index->debug_string(indent));
             }
         }
     };
@@ -264,8 +328,9 @@ namespace runtime {
             return std::unique_ptr<Obj<DEBUG>>(
                 new Assign(m_lhs->clone_specialize(), m_rhs->clone(), this->get_range()));
         }
-        [[nodiscard]] std::string to_string() const override {
-            return std::format("{} := {}", m_lhs->to_string(), m_rhs->to_string());
+        [[nodiscard]] std::string debug_string(int indent) const override {
+            return std::format("{} := {}", m_lhs->debug_string(indent),
+                               m_rhs->debug_string(indent));
         }
     };
 
@@ -342,9 +407,9 @@ namespace runtime {
             return std::unique_ptr<Obj<DEBUG>>(
                 new OperatorBinary(m_kind, m_lhs->clone(), m_rhs->clone(), this->get_range()));
         }
-        [[nodiscard]] std::string to_string() const override {
-            return std::format("{} {} {}", m_lhs->to_string(), diag::to_string(m_kind),
-                               m_rhs->to_string());
+        [[nodiscard]] std::string debug_string(int indent) const override {
+            return std::format("{} {} {}", m_lhs->debug_string(indent), diag::to_string(m_kind),
+                               m_rhs->debug_string(indent));
         }
     };
 
@@ -381,8 +446,8 @@ namespace runtime {
             return std::unique_ptr<Obj<DEBUG>>(
                 new OperatorUnary(m_kind, m_rhs->clone(), this->get_range()));
         }
-        [[nodiscard]] std::string to_string() const override {
-            return std::format("{}{}", diag::to_string(m_kind), m_rhs->to_string());
+        [[nodiscard]] std::string debug_string(int indent) const override {
+            return std::format("{}{}", diag::to_string(m_kind), m_rhs->debug_string(indent));
         }
     };
 
@@ -407,7 +472,9 @@ namespace runtime {
         [[nodiscard]] std::unique_ptr<Obj<DEBUG>> clone() const override {
             return std::make_unique<Number<DEBUG>>(m_value.clone(), this->get_range());
         }
-        [[nodiscard]] std::string to_string() const override { return diag::to_string(m_value); }
+        [[nodiscard]] std::string debug_string(int /*indent*/) const override {
+            return diag::to_string(m_value);
+        }
     };
 
     template <typename T, bool DEBUG> class StdFun : public Obj<DEBUG> {
@@ -433,7 +500,9 @@ namespace runtime {
             gca.insert(std::move(loc),
                        std::make_unique<Number<DEBUG>>(number::Value(chr), std::nullopt));
         }
-        [[nodiscard]] std::string to_string() const override { return "std_input"; }
+        [[nodiscard]] std::string debug_string(int /*indent*/) const override {
+            return "std_input";
+        }
     };
 
     template <bool DEBUG> class StdOutput : public StdFun<StdOutput<DEBUG>, DEBUG> {
@@ -455,7 +524,9 @@ namespace runtime {
             }
             out << static_cast<char>(c->to_int());
         }
-        [[nodiscard]] std::string to_string() const override { return "std_output"; }
+        [[nodiscard]] std::string debug_string(int /*indent*/) const override {
+            return "std_output";
+        }
     };
 
     template <bool DEBUG> class StdDecompose : public StdFun<StdDecompose<DEBUG>, DEBUG> {
@@ -489,7 +560,9 @@ namespace runtime {
             loc.emplace_back(diag::Range{}, number::Value("std_decompose_denominator"));
             gca.insert(std::move(loc), std::make_unique<Array<DEBUG>>(std::move(denominator)));
         }
-        [[nodiscard]] std::string to_string() const override { return "std_decompose"; }
+        [[nodiscard]] std::string debug_string(int /*indent*/) const override {
+            return "std_decompose";
+        }
     };
 
     template <bool DEBUG> class Runtime {
@@ -497,15 +570,17 @@ namespace runtime {
         // glocal circular array
         Array<DEBUG> m_gca;
         Array<DEBUG> m_code;
+        const std::string& m_src_code;
 
       public:
-        explicit Runtime(ast::Array&& code)
+        explicit Runtime(ast::Array&& code, const std::string& src_code)
             : m_gca{static_cast<int>(code.elements.size()), std::nullopt},
               m_code{std::move(code),
                      code.elements.empty()
                          ? diag::Range{.start{.line{0}, .column{0}}, .end{.line{0}, .column{0}}}
                          : diag::Range{.start{code.elements[0].range.start},
-                                       .end{code.elements.back().range.end}}} {
+                                       .end{code.elements.back().range.end}}},
+              m_src_code{src_code} {
             auto loc = std::vector<diag::WithInfo<number::Value>>();
             loc.emplace_back(diag::Range{}, number::Value("std_input"));
             m_gca.insert(std::move(loc), std::make_unique<StdInput<DEBUG>>());
@@ -519,11 +594,99 @@ namespace runtime {
 
         void run(std::istream& in, std::ostream& out, std::ostream& err) {
             try {
-                auto debugger = Debugger<DEBUG>();
+                auto debugger = Debugger<DEBUG>(m_src_code);
                 m_code.execute(m_gca, in, out, debugger);
             } catch (const diag::RuntimeError& e) {
-                err << e.msg;
+                err << e.msg << '\n';
             }
         }
     };
+
+    /*
+     * The debugger support step over, step into, and step out, where the things stepping in and out
+     * are Array executions.
+     * Pause every array element and prints out the current code being executed.
+     * i: step into
+     * o: step out
+     * n: step over
+     * e Expr: evaluate an expression
+     * b int: set breakpoint
+     * c: continue;
+     */
+    template <bool DEBUG>
+    void Debugger<DEBUG>::execute(const std::unique_ptr<Obj<DEBUG>>& obj, const Array<DEBUG>& gca) {
+        if constexpr (DEBUG) {
+            auto range = obj->get_range();
+            if (m_stepping_level.value_or(0) >= m_arr_level ||
+                (range && m_breakpoints.contains(range->start.line))) {
+                std::cout << m_lines[range->start.line] << '\n';
+                char act{0};
+                auto con = true;
+                while (con) {
+                    act = static_cast<char>(std::cin.get());
+                    while (act == '\n') {
+                        act = static_cast<char>(std::cin.get());
+                    }
+                    switch (act) {
+                    case 'i':
+                        m_stepping_level = m_arr_level + 1;
+                        con = false;
+                        break;
+                    case 'o':
+                        m_stepping_level = m_arr_level - 1;
+                        con = false;
+                        break;
+                    case 'n':
+                        con = false;
+                        m_stepping_level = m_arr_level;
+                        break;
+                    case 'c':
+                        con = false;
+                        m_stepping_level = std::nullopt;
+                        break;
+                    case 'b': {
+                        auto line = 0;
+                        std::cin >> line;
+                        m_breakpoints.insert(line - 1);
+                    } break;
+                    case 'e': {
+                        std::string expr;
+                        std::getline(std::cin, expr);
+                        act = '\n';
+
+                        auto diags = diag::Diags();
+                        auto parsed = parse(expr, diags);
+                        if (!diags.empty()) {
+                            std::cout << diags.to_string() << '\n';
+                            if (diags.has_fatal()) {
+                                return;
+                            }
+                        }
+                        for (auto&& e : std::move(parsed->elements)) {
+                            try {
+                                std::cout
+                                    << from_ast<DEBUG>(std::move(e))->evaluate(gca)->debug_string(0)
+                                    << ";\n";
+                            } catch (const diag::RuntimeError& e) {
+                                std::cout << e.msg << '\n';
+                            }
+                        }
+                    } break;
+                    case 'g':
+                        std::cout << gca.debug_string(0) << '\n';
+                        break;
+                    default: {
+                        std::string expr;
+                        std::getline(std::cin, expr);
+                        act = '\n';
+                        std::cout << "Unrecognized command.\n";
+                    } break;
+                    }
+                    while (act != '\n') {
+                        act = static_cast<char>(std::cin.get());
+                    }
+                }
+            }
+        }
+    }
 } // namespace runtime

@@ -8,6 +8,7 @@ namespace po = boost::program_options;
 
 namespace o {
     constexpr char HELP[]{"help"};
+    constexpr char DEBUG[]("debug");
     constexpr char SRC_FILE[]{"src-file"};
 } // namespace o
 
@@ -15,6 +16,7 @@ int main(int argc, char* argv[]) {
     // Declare the supported options.
     po::options_description visible;
     visible.add_options()(o::HELP, "produce this help message");
+    visible.add_options()(o::DEBUG, "run script with debugger");
 
     std::string src_fname{};
 
@@ -30,7 +32,7 @@ int main(int argc, char* argv[]) {
     po::store(po::command_line_parser(argc, argv).options(options).positional(p).run(), vm);
     po::notify(vm);
 
-    if (vm.contains(o::HELP) || src_fname == "") {
+    if (vm.contains(o::HELP)) {
         std::cout << "Usage: circle-lang <source file>\n" << visible;
         return 1;
     }
@@ -46,5 +48,5 @@ int main(int argc, char* argv[]) {
     src_code_s << src_file.rdbuf();
     std::string src_code = src_code_s.str();
 
-    interpret(src_code, std::cin, std::cout, std::cerr, Config{.debug{true}});
+    interpret(src_code, std::cin, std::cout, std::cerr, Config{.debug{vm.contains(o::DEBUG)}});
 }

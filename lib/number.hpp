@@ -85,6 +85,8 @@ namespace number {
         static Index make_ref(const Value& value, int length);
         [[nodiscard]] Index clone() const;
 
+        [[nodiscard]] const Value& get_value() const;
+
         bool operator==(const Index& rhs) const;
         [[nodiscard]] std::size_t hash() const;
     };
