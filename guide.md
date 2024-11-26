@@ -25,6 +25,11 @@ follows:
 - Use `(S)` as the starting boolean variable for simulating if with while
   loop.
 
+## ; Semicolons
+- Put semicolons at the front of each but the first statement of each loop. This
+  is because semicolons are much harder to miss when they're aligned at the
+  start.
+
 ## Dynamic array
 - Use an array of two elements, the first element being the length, the second
   element being the array of length `1` where all elements are stored on `n*1`
@@ -35,18 +40,19 @@ follows:
 ## Homoiconicity
 *Array evaluate to themselves!* This means that if you write:
 ```
-(Y) := a * 1;
-(X) := (( (Y) ));
-(Y) := b * 1;
-(std_output_char) := (X)(0);
-(std_output);
-(Y) := c * 1;
-(std_output_char) := (X)(0);
-(std_output);
+(Y) := a * 1
+; (X) := (( (Y) ))
+; (Y) := b * 1
+; (std_output_char) := (X)(0)
+; (std_output)
+; (Y) := c * 1
+; (std_output_char) := (X)(0)
+; (std_output)
 ```
 It will print `bc`. This is because `(Y)` within the array isn't evaluated on
 line two, it is only evaluated on line 4 when `(X)(0)` evaluate to `(Y)` which
 then evaluate to `b * 1`. And after that `(X)` is still occupied by `(( (Y) ))`
 which is why when `(Y)` changed to `c * 1`, it prints `c` on line 8.
 
-For some examples, check out [these sample programs](./sample-program/).
+## Examples
+- For some examples, check out [these sample programs](./sample-program/).

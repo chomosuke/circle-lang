@@ -181,7 +181,7 @@
 	; (V) := (V) + 1*1
 
 	; ( (V) + 1*1 ) := ((0))
-	; ( (V) + 1*1 )(Str) := ((I; l; l; 32 / 1; f; o; r; m; e; d; 32 / 1; e; q; u; a; t; i; o; n; 46 / 1; 10))
+	; ( (V) + 1*1 )(Str) := ((I; l; l; 32 / 1; f; o; r; m; e; d; 32 / 1; e; q; u; a; t; i; o; n; 46 / 1; 10 / 1))
 	; (F_print_str)
 
 	; ( (V) ) := 0
@@ -261,6 +261,14 @@
 		; ( (V) )(Stack) := (R)
 	))
 
+	; (S) := ( (V) )(Stack)(Size) = 0
+	; ((
+		(S)
+		; (std_output_char) := 48 # 0
+		; (std_output)
+		; (S) := 0
+	))
+
 	; ((
 		( (V) )(Stack)(Size) > 0
 
@@ -271,9 +279,6 @@
 		; (std_output_char) := (R)(Elem) + 48
 		; (std_output)
 	))
-
-	; (std_output_char) := 10
-	; (std_output)
 
 	; ( (V) ) := 0
 	; (V) := (V) - 1*1
@@ -286,26 +291,63 @@
 
 	; (std_decompose_number) := ( (V) )(Num)
 	; (std_decompose)
-	; ( (V) )(Num) := (std_decompose_numerator)
-	; ( (V) )(Den) := (std_decompose_denominator)
+	; ( (V) )(Nume) := (std_decompose_numerator)
+	; ( (V) )(Deno) := (std_decompose_denominator)
 
-	; ( (V) + 1*1 ) := ((0))
-	; ( (V) + 1*1 )(Str) := (( 40/1 )) # (
-	; (F_print_str)
+	; ( (V) )(F_print_ator) := ((
+		(S)
+		; (std_output_char) := 40 # (
+		; (std_output)
 
-	; ( (V) + 1*1 ) := ((0))
-	; ( (V) + 1*1 )(Array) := ( (V) )(Num)
-	; (F_len)
-	; ( (V) )(Len) := (R)
-	; ((
+		; ( (V) + 1*1 ) := ((0))
+		; ( (V) + 1*1 )(Array) := ( (V) )(Num)
+		; (F_len)
+		; ( (V) )(Len) := (R)
 		
+		; ( (V) + 1*1 ) := ((0))
+		; ( (V) + 1*1 )(Num) := ( (V) )(Num)(0)
+		; (F_print_xpi)
+
+		; ( (V) )(I) := 1
+		; ((
+			( (V) )(I) < ( (V) )(Len)
+
+			; ( (V) + 1*1 ) := ((0))
+			; ( (V) + 1*1 )(Str) := (( 32/1; 43/1; 32/1 ))
+			; (F_print_str)
+
+			; ( (V) + 1*1 ) := ((0))
+			; ( (V) + 1*1 )(Num) := ( (V) )(Num)( ( (V) )(I) )
+			; (F_print_xpi)
+
+			; ( (V) + 1*1 ) := ((0))
+			; ( (V) + 1*1 )(Str) := (( 32/1; p; i; 94/1 ))
+			; (F_print_str)
+
+			; ( (V) + 1*1 ) := ((0))
+			; ( (V) + 1*1 )(Num) := ( (V) )(I)
+			; (F_print_xpi)
+
+			; ( (V) )(I) := ( (V) )(I) + 1
+		))
+
+		; (std_output_char) := 41 # )
+		; (std_output)
+
+		; (S) := 0
 	))
 
-	; ( (V) + 1*1 )(Str) := (( 41/1; 47/1; 40/1 )) # )/(
+	; ( (V) )(Num) := ( (V) )(Nume)
+	; (S) := 1
+	; ( (V) )(F_print_ator)
+
+	; ( (V) + 1*1 ) := ((0))
+	; ( (V) + 1*1 )(Str) := (( 32/1; 47/1; 32/1 )) # /
 	; (F_print_str)
 
-	; ( (V) + 1*1 )(Str) := (( 41/1 )) # )
-	; (F_print_str)
+	; ( (V) )(Num) := ( (V) )(Deno)
+	; (S) := 1
+	; ( (V) )(F_print_ator)
 
 	; ( (V) ) := 0
 	; (V) := (V) - 1*1
@@ -384,12 +426,12 @@
 
 	; (S) := (std_input_char) = 42
 	; ( (V) )(Op) :=
-		( (V) )(Num) := ( (V) )(Num1) * ( (V) )(Num2) / 1
+		( (V) )(Num) := ( (V) )(Num1) * ( (V) )(Num2)
 	; ( (V) )(F_calc)
 
 	; (S) := (std_input_char) = 47
 	; ( (V) )(Op) :=
-		( (V) )(Num) := ( (V) )(Num1) / ( (V) )(Num2) * 1
+		( (V) )(Num) := ( (V) )(Num1) / ( (V) )(Num2)
 	; ( (V) )(F_calc)
 
 	; (std_input)
@@ -409,8 +451,24 @@
 ; ( (V) )(Stack) := (R)(Vec)
 ; ( (V) )(Num) := (R)(Elem)
 
-; ( (V) + 1*1 ) := ((0))
-; ( (V) + 1*1 )(Num) := ( (V) )(Num)
-; (F_print_xpi)
+; (S) := ( (V) )(Stack)(Size) = 0
+; ((
+	(S)
+	; ( (V) + 1*1 ) := ((0))
+	; ( (V) + 1*1 )(Num) := ( (V) )(Num)
+	; (F_print_num)
+
+	; (std_output_char) := 10
+	; (std_output)
+	; (S) := 0
+))
+
+; (S) := ( (V) )(Stack)(Size) != 0
+; ((
+	(S)
+	; ( (V) + 1*1 ) := ((0))
+	; (F_ill_formed)
+	; (S) := 0
+))
 
 ; (S) := 0

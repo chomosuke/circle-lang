@@ -5,6 +5,7 @@
 #include "number.hpp"
 #include "parser.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -535,30 +536,30 @@ namespace runtime {
                      Debugger<DEBUG>& /*debugger*/) override {
             auto num = gca.index(number::Value("std_decompose_number"));
             const auto& number = dynamic_cast<Number<DEBUG>*>(num.get())->get_value();
-            auto numerator =
-                Array<DEBUG>(static_cast<int>(number.get_numerator().size()), std::nullopt);
-            for (auto i = 0; i < number.get_numerator().size(); i++) {
+
+            auto insert = [&](const std::vector<BigInt>& ator, std::string_view index) {
+                auto arr = Array<DEBUG>(static_cast<int>(std::max(ator.size(), 1UL)), std::nullopt);
+                if (ator.empty()) {
+                    auto loc = std::vector<diag::WithInfo<number::Value>>();
+                    loc.emplace_back(diag::Range{}, number::Value(BigInt(0)));
+                    arr.insert(std::move(loc), std::make_unique<Number<DEBUG>>(
+                                                   number::Value(BigInt(0)), std::nullopt));
+                } else {
+                    for (auto i = 0; i < ator.size(); i++) {
+                        auto loc = std::vector<diag::WithInfo<number::Value>>();
+                        loc.emplace_back(diag::Range{}, number::Value(BigInt(i)));
+                        arr.insert(std::move(loc), std::make_unique<Number<DEBUG>>(
+                                                       number::Value(ator[i]), std::nullopt));
+                    }
+                }
+
                 auto loc = std::vector<diag::WithInfo<number::Value>>();
-                loc.emplace_back(diag::Range{}, number::Value(BigInt(i)));
-                numerator.insert(std::move(loc),
-                                 std::make_unique<Number<DEBUG>>(
-                                     number::Value(number.get_numerator()[i]), std::nullopt));
-            }
-            auto loc = std::vector<diag::WithInfo<number::Value>>();
-            loc.emplace_back(diag::Range{}, number::Value("std_decompose_numerator"));
-            gca.insert(std::move(loc), std::make_unique<Array<DEBUG>>(std::move(numerator)));
-            auto denominator =
-                Array<DEBUG>(static_cast<int>(number.get_denominator().size()), std::nullopt);
-            for (auto i = 0; i < number.get_denominator().size(); i++) {
-                auto loc = std::vector<diag::WithInfo<number::Value>>();
-                loc.emplace_back(diag::Range{}, number::Value(BigInt(i)));
-                denominator.insert(std::move(loc),
-                                   std::make_unique<Number<DEBUG>>(
-                                       number::Value(number.get_denominator()[i]), std::nullopt));
-            }
-            loc = std::vector<diag::WithInfo<number::Value>>();
-            loc.emplace_back(diag::Range{}, number::Value("std_decompose_denominator"));
-            gca.insert(std::move(loc), std::make_unique<Array<DEBUG>>(std::move(denominator)));
+                loc.emplace_back(diag::Range{}, number::Value(index));
+                gca.insert(std::move(loc), std::make_unique<Array<DEBUG>>(std::move(arr)));
+            };
+
+            insert(number.get_numerator(), "std_decompose_numerator");
+            insert(number.get_denominator(), "std_decompose_denominator");
         }
         [[nodiscard]] std::string debug_string(int /*indent*/) const override {
             return "std_decompose";
