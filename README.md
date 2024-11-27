@@ -27,4 +27,4 @@ Do `circle-lang <file-name>` to interpret a file.
 - [sample-program/postfix-calculator.crcl](sample-program/postfix-calculator.crcl)
 
 ## Working with Circle Lang
-Check out [guide.md](guide.md) and [documentation.md](documentation.md).
+Check out [guide.md](guide.md) and [spec.md](spec.md).
