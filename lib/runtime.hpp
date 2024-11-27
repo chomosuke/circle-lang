@@ -83,7 +83,8 @@ namespace runtime {
                 m_arr_level--;
             }
         }
-        void execute(const std::unique_ptr<Obj<DEBUG>>& obj, const Array<DEBUG>& gca);
+        void execute(const std::unique_ptr<Obj<DEBUG>>& obj, const Array<DEBUG>& gca,
+                     std::istream& in, std::ostream& out, std::ostream& err);
     };
 
     template <bool DEBUG> class Obj {
@@ -102,7 +103,7 @@ namespace runtime {
         [[nodiscard]] std::optional<diag::Range> get_range() const { return m_range; }
 
         virtual void execute(Array<DEBUG>& gca, std::istream& in, std::ostream& out,
-                             Debugger<DEBUG>& debugger) = 0;
+                             std::ostream& err, Debugger<DEBUG>& debugger) = 0;
         [[nodiscard]] virtual std::unique_ptr<Obj<DEBUG>>
         evaluate(const Array<DEBUG>& gca) const = 0;
         [[nodiscard]] virtual std::unique_ptr<Obj<DEBUG>> clone() const = 0;
@@ -164,24 +165,24 @@ namespace runtime {
             return e->second->clone();
         }
 
-        void execute(Array<DEBUG>& gca, std::istream& in, std::ostream& out,
+        void execute(Array<DEBUG>& gca, std::istream& in, std::ostream& out, std::ostream& err,
                      Debugger<DEBUG>& debugger) override {
             debugger.arr_enter();
             const auto zero = number::Value(BigInt(0));
             auto obj = index(zero);
             auto first = obj->evaluate(gca);
-            debugger.execute(obj, gca);
+            debugger.execute(obj, gca, in, out, err);
             auto* number = dynamic_cast<Number<DEBUG>*>(first.get());
             while (number == nullptr || !number::equal(number->get_value(), zero)) {
                 for (auto i = 1; i < m_length; i++) {
                     auto obj = index(number::Value(i));
-                    debugger.execute(obj, gca);
-                    obj->execute(gca, in, out, debugger);
+                    debugger.execute(obj, gca, in, out, err);
+                    obj->execute(gca, in, out, err, debugger);
                 }
 
                 auto obj = index(zero);
                 first = obj->evaluate(gca);
-                debugger.execute(obj, gca);
+                debugger.execute(obj, gca, in, out, err);
                 number = dynamic_cast<Number<DEBUG>*>(first.get());
             }
             debugger.arr_exit();
@@ -264,9 +265,9 @@ namespace runtime {
                 new Index(std::move(subject), m_index->clone(), this->get_range()));
         }
 
-        void execute(Array<DEBUG>& gca, std::istream& in, std::ostream& out,
+        void execute(Array<DEBUG>& gca, std::istream& in, std::ostream& out, std::ostream& err,
                      Debugger<DEBUG>& debugger) override {
-            evaluate(gca)->execute(gca, in, out, debugger);
+            evaluate(gca)->execute(gca, in, out, err, debugger);
         }
         [[nodiscard]] std::unique_ptr<Obj<DEBUG>> evaluate(const Array<DEBUG>& gca) const override {
             const auto* arr = &gca;
@@ -313,7 +314,7 @@ namespace runtime {
               m_lhs{std::make_unique<Index<DEBUG>>(std::move(*node.lhs.t), node.lhs.range)},
               m_rhs{from_ast<DEBUG>(std::move(node.rhs))} {}
 
-        void execute(Array<DEBUG>& gca, std::istream& /*in*/, std::ostream& /*out*/,
+        void execute(Array<DEBUG>& gca, std::istream& /*in*/, std::ostream& /*out*/, std::ostream& /*err*/,
                      Debugger<DEBUG>& /*debugger*/) override {
             auto rhs = m_rhs->evaluate(gca);
             auto gca_loc = m_lhs->get_gca_location(gca);
@@ -349,9 +350,9 @@ namespace runtime {
             : Obj<DEBUG>(range), m_kind{node.kind}, m_lhs{from_ast<DEBUG>(std::move(node.lhs))},
               m_rhs{from_ast<DEBUG>(std::move(node.rhs))} {}
 
-        void execute(Array<DEBUG>& gca, std::istream& in, std::ostream& out,
+        void execute(Array<DEBUG>& gca, std::istream& in, std::ostream& out, std::ostream& err,
                      Debugger<DEBUG>& debugger) override {
-            evaluate(gca)->execute(gca, in, out, debugger);
+            evaluate(gca)->execute(gca, in, out, err, debugger);
         }
         [[nodiscard]] std::unique_ptr<Obj<DEBUG>> evaluate(const Array<DEBUG>& gca) const override {
             auto rhs = m_rhs->evaluate(gca);
@@ -426,9 +427,9 @@ namespace runtime {
         OperatorUnary(ast::OperatorUnary&& node, diag::Range range)
             : Obj<DEBUG>(range), m_kind{node.kind}, m_rhs{from_ast<DEBUG>(std::move(node.rhs))} {}
 
-        void execute(Array<DEBUG>& gca, std::istream& in, std::ostream& out,
+        void execute(Array<DEBUG>& gca, std::istream& in, std::ostream& out, std::ostream& err,
                      Debugger<DEBUG>& debugger) override {
-            evaluate(gca)->execute(gca, in, out, debugger);
+            evaluate(gca)->execute(gca, in, out, err, debugger);
         }
         [[nodiscard]] std::unique_ptr<Obj<DEBUG>> evaluate(const Array<DEBUG>& gca) const override {
             auto rhs = m_rhs->evaluate(gca);
@@ -465,7 +466,7 @@ namespace runtime {
         [[nodiscard]] const number::Value& get_value() const { return m_value; }
 
         void execute(Array<DEBUG>& /*gca*/, std::istream& /*in*/, std::ostream& /*out*/,
-                     Debugger<DEBUG>& /*debugger*/) override {}
+                     std::ostream& /*err*/, Debugger<DEBUG>& /*debugger*/) override {}
         [[nodiscard]] std::unique_ptr<Obj<DEBUG>>
         evaluate(const Array<DEBUG>& /*gca*/) const override {
             return clone();
@@ -494,7 +495,7 @@ namespace runtime {
     template <bool DEBUG> class StdInput : public StdFun<StdInput<DEBUG>, DEBUG> {
       public:
         void execute(Array<DEBUG>& gca, std::istream& in, std::ostream& /*out*/,
-                     Debugger<DEBUG>& /*debugger*/) override {
+                     std::ostream& /*err*/, Debugger<DEBUG>& /*debugger*/) override {
             auto chr = in.get();
             auto loc = std::vector<diag::WithInfo<number::Value>>();
             loc.emplace_back(diag::Range{}, number::Value("std_input_char"));
@@ -509,7 +510,7 @@ namespace runtime {
     template <bool DEBUG> class StdOutput : public StdFun<StdOutput<DEBUG>, DEBUG> {
       public:
         void execute(Array<DEBUG>& gca, std::istream& /*in*/, std::ostream& out,
-                     Debugger<DEBUG>& /*debug*/) override {
+                     std::ostream& /*err*/, Debugger<DEBUG>& /*debug*/) override {
             auto obj = gca.index(number::Value("std_output_char"));
             auto* num = dynamic_cast<Number<DEBUG>*>(obj.get());
             if (num == nullptr) {
@@ -533,7 +534,7 @@ namespace runtime {
     template <bool DEBUG> class StdDecompose : public StdFun<StdDecompose<DEBUG>, DEBUG> {
       public:
         void execute(Array<DEBUG>& gca, std::istream& /*in*/, std::ostream& /*out*/,
-                     Debugger<DEBUG>& /*debugger*/) override {
+                     std::ostream& /*err*/, Debugger<DEBUG>& /*debugger*/) override {
             auto num = gca.index(number::Value("std_decompose_number"));
             const auto& number = dynamic_cast<Number<DEBUG>*>(num.get())->get_value();
 
@@ -596,7 +597,7 @@ namespace runtime {
         void run(std::istream& in, std::ostream& out, std::ostream& err) {
             try {
                 auto debugger = Debugger<DEBUG>(m_src_code);
-                m_code.execute(m_gca, in, out, debugger);
+                m_code.execute(m_gca, in, out, err, debugger);
             } catch (const diag::RuntimeError& e) {
                 err << e.msg << '\n';
             }
@@ -615,18 +616,19 @@ namespace runtime {
      * c: continue;
      */
     template <bool DEBUG>
-    void Debugger<DEBUG>::execute(const std::unique_ptr<Obj<DEBUG>>& obj, const Array<DEBUG>& gca) {
+    void Debugger<DEBUG>::execute(const std::unique_ptr<Obj<DEBUG>>& obj, const Array<DEBUG>& gca,
+                                  std::istream& in, std::ostream& out, std::ostream& err) {
         if constexpr (DEBUG) {
             auto range = obj->get_range();
             if (m_stepping_level.value_or(0) >= m_arr_level ||
                 (range && m_breakpoints.contains(range->start.line))) {
-                std::cout << m_lines[range->start.line] << '\n';
+                out << m_lines[range->start.line] << '\n';
                 char act{0};
                 auto con = true;
                 while (con) {
-                    act = static_cast<char>(std::cin.get());
+                    act = static_cast<char>(in.get());
                     while (act == '\n') {
-                        act = static_cast<char>(std::cin.get());
+                        act = static_cast<char>(in.get());
                     }
                     switch (act) {
                     case 'i':
@@ -647,44 +649,43 @@ namespace runtime {
                         break;
                     case 'b': {
                         auto line = 0;
-                        std::cin >> line;
+                        in >> line;
                         m_breakpoints.insert(line - 1);
                     } break;
                     case 'e': {
                         std::string expr;
-                        std::getline(std::cin, expr);
+                        std::getline(in, expr);
                         act = '\n';
 
                         auto diags = diag::Diags();
                         auto parsed = parse(expr, diags);
                         if (!diags.empty()) {
-                            std::cout << diags.to_string() << '\n';
+                            out << diags.to_string() << '\n';
                             if (diags.has_fatal()) {
                                 return;
                             }
                         }
                         for (auto&& e : std::move(parsed->elements)) {
                             try {
-                                std::cout
-                                    << from_ast<DEBUG>(std::move(e))->evaluate(gca)->debug_string(0)
+                                out << from_ast<DEBUG>(std::move(e))->evaluate(gca)->debug_string(0)
                                     << ";\n";
                             } catch (const diag::RuntimeError& e) {
-                                std::cerr << e.msg << '\n';
+                                err << e.msg << '\n';
                             }
                         }
                     } break;
                     case 'g':
-                        std::cout << gca.debug_string(0) << '\n';
+                        out << gca.debug_string(0) << '\n';
                         break;
                     default: {
                         std::string expr;
-                        std::getline(std::cin, expr);
+                        std::getline(in, expr);
                         act = '\n';
-                        std::cerr << "Unrecognized command.\n";
+                        err << "Unrecognized command.\n";
                     } break;
                     }
                     while (act != '\n') {
-                        act = static_cast<char>(std::cin.get());
+                        act = static_cast<char>(in.get());
                     }
                 }
             }

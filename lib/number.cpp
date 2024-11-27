@@ -479,7 +479,7 @@ namespace number {
             }
             sf *= 2;
         }
-        std::cout << "Not enough pi digits to figure out which if " << lhs.to_string() << " < "
+        std::cerr << "Not enough pi digits to figure out which if " << lhs.to_string() << " < "
                   << rhs.to_string() << '\n';
         return false;
     }

@@ -13,7 +13,7 @@ void interpret(const std::string& src_code, std::istream& in, std::ostream& out,
     auto diags = diag::Diags();
     auto parsed = parse(src_code, diags);
     if (!diags.empty()) {
-        std::cerr << diags.to_string() << '\n';
+        err << diags.to_string() << '\n';
         if (diags.has_fatal()) {
             return;
         }
