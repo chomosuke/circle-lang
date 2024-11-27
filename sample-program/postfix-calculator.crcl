@@ -434,6 +434,21 @@
 		( (V) )(Num) := ( (V) )(Num1) / ( (V) )(Num2)
 	; ( (V) )(F_calc)
 
+	; (S) := (std_input_char) = 60
+	; ( (V) )(Op) :=
+		( (V) )(Num) := ( (V) )(Num1) < ( (V) )(Num2)
+	; ( (V) )(F_calc)
+
+	; (S) := (std_input_char) = 61
+	; ( (V) )(Op) :=
+		( (V) )(Num) := ( (V) )(Num1) = ( (V) )(Num2)
+	; ( (V) )(F_calc)
+
+	; (S) := (std_input_char) = 62
+	; ( (V) )(Op) :=
+		( (V) )(Num) := ( (V) )(Num1) > ( (V) )(Num2)
+	; ( (V) )(F_calc)
+
 	; (std_input)
 ))
 

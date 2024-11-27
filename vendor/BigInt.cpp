@@ -170,6 +170,16 @@ BigInt::BigInt() {
 }
 
 /*
+    Move constructor
+    ----------------
+*/
+
+BigInt::BigInt(BigInt&& num) {
+    value = std::move(num.value);
+    sign = num.sign;
+}
+
+/*
     Copy constructor
     ----------------
 */
@@ -269,6 +279,18 @@ long long BigInt::to_long_long() const { return std::stoll(this->to_string()); }
     Assignment operators
     ===========================================================================
 */
+
+/*
+    BigInt = BigInt move
+    ---------------
+*/
+
+BigInt& BigInt::operator=(BigInt&& num) {
+    value = std::move(num.value);
+    sign = num.sign;
+
+    return *this;
+}
 
 /*
     BigInt = BigInt

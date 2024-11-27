@@ -15,11 +15,13 @@ class BigInt {
   public:
     // Constructors:
     BigInt();
+    BigInt(BigInt&&);
     BigInt(const BigInt&);
     BigInt(const long long&);
     BigInt(const std::string&);
 
     // Assignment operators:
+    BigInt& operator=(BigInt&&);
     BigInt& operator=(const BigInt&);
     BigInt& operator=(const long long&);
     BigInt& operator=(const std::string&);

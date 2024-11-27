@@ -129,6 +129,30 @@ TEST(Number, Bool) {
     EXPECT_TRUE((num4 > num5).to_bool());
 }
 
+TEST(Number, PrecisionComparison) {
+    auto sf = 128;
+    auto pi = BigInt(std::string(PI, PI + sf));
+    auto ten = big_pow10(sf - 1);
+    auto f = number::Value(1);
+
+    auto num_smol = number::Value(pi) / f;
+    auto num_big = number::Value(pi + 1) / f;
+    auto num = number::Value(ten);
+
+    EXPECT_TRUE((num_smol < num).to_bool());
+    EXPECT_TRUE((num < num_big).to_bool());
+    auto n_num_smol = number::Value(BigInt(0)) - num_big;
+    auto n_num_big = number::Value(BigInt(0)) - num_smol;
+    auto n_num = number::Value(BigInt(0)) - num;
+    EXPECT_TRUE((n_num_smol < n_num).to_bool());
+    EXPECT_TRUE((n_num < n_num_big).to_bool());
+    num_smol = num_smol * f;
+    num_big = num_big * f;
+    num = num * f;
+    EXPECT_TRUE((num_smol < num).to_bool());
+    EXPECT_TRUE((num < num_big).to_bool());
+}
+
 TEST(Number, Index) {
     auto pi = number::Value(1);
     // NOLINTNEXTLINE(misc-redundant-expression)

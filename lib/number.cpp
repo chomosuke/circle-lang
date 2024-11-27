@@ -377,22 +377,22 @@ namespace number {
         auto pi = BigInt(std::string(PI, PI + sf));
         auto ten = big_pow10(sf - 1);
         auto acc = ten;
-        auto add_margin = [&](const BigInt& e) {
+        auto add_margin = [&](const BigInt& e, const BigInt& acc) {
             if (e < 0) {
-                result.first += e - 1;
-                result.second += e;
+                result.first += e * (acc + 1);
+                result.second += e * acc;
             } else if (e > 0) {
-                result.first += e;
-                result.second += e + 1;
+                result.first += e * acc;
+                result.second += e * (acc + 1);
             }
         };
         if (!v.empty()) {
-            add_margin(v[0] * acc);
+            add_margin(v[0], acc);
         }
         for (auto i = 1; i < v.size(); i++) {
             acc *= pi;
             acc /= ten;
-            add_margin(v[i] * acc);
+            add_margin(v[i], acc);
         }
         return result;
     }
@@ -415,28 +415,55 @@ namespace number {
     }
 
     std::optional<bool> less_than(const Value& lhs, const Value& rhs, int sf) {
-        auto lhs_n = evaluate_with_margin(lhs.get_numerator(), sf);
-        auto lhs_d = evaluate_with_margin(lhs.get_denominator(), sf);
-        if (lhs_d.first < 0) {
-            lhs_n.first = -lhs_n.second;
-            lhs_n.second = -lhs_n.first;
-            lhs_d.first = -lhs_d.second;
-            lhs_d.second = -lhs_d.first;
+        using Range = std::pair<BigInt, BigInt>;
+        auto eval = [&sf](const Value& hs) -> std::optional<std::pair<Range, Range>> {
+            auto hs_n = evaluate_with_margin(hs.get_numerator(), sf);
+            auto hs_d = evaluate_with_margin(hs.get_denominator(), sf);
+            if ((hs_n.first < 0 && hs_n.second > 0) || (hs_d.first < 0 && hs_d.second > 0)) {
+                return std::nullopt;
+            }
+            if (hs_d.first < 0) {
+                auto first = std::move(hs_n.first);
+                hs_n.first = -hs_n.second;
+                hs_n.second = -first;
+                first = std::move(hs_d.first);
+                hs_d.first = -hs_d.second;
+                hs_d.second = -first;
+            }
+            return std::make_pair(hs_n, hs_d);
+        };
+
+        auto l = eval(lhs);
+        if (!l) {
+            return std::nullopt;
         }
-        auto rhs_n = evaluate_with_margin(rhs.get_numerator(), sf);
-        auto rhs_d = evaluate_with_margin(rhs.get_denominator(), sf);
-        if (rhs_d.first < 0) {
-            rhs_n.first = -rhs_n.second;
-            rhs_n.second = -rhs_n.first;
-            rhs_d.first = -rhs_d.second;
-            rhs_d.second = -rhs_d.first;
+        auto lhs_n = l->first;
+        auto lhs_d = l->second;
+
+        auto r = eval(rhs);
+        if (!r) {
+            return std::nullopt;
         }
-        if (lhs_n.second * rhs_d.second < rhs_n.first * lhs_d.first) {
+        auto rhs_n = r->first;
+        auto rhs_d = r->second;
+
+        auto get_nd = [](const Range& n, const Range& d) {
+            return n.first >= 0 ? std::make_pair(n.first * d.first, //
+                                                 n.second * d.second)
+                                : std::make_pair(n.first * d.second, //
+                                                 n.second * d.first);
+        };
+
+        auto lhs_nd = get_nd(lhs_n, rhs_d);
+        auto rhs_nd = get_nd(rhs_n, lhs_d);
+
+        if (lhs_nd.second < rhs_nd.first) {
             return true;
         }
-        if (lhs_n.first * rhs_d.first > rhs_n.second * lhs_d.second) {
+        if (rhs_nd.second < lhs_nd.first) {
             return false;
         }
+
         return std::nullopt;
     }
 
@@ -445,18 +472,12 @@ namespace number {
             return false;
         }
         auto sf = 8;
-        // NOLINTBEGIN(cppcoreguidelines-narrowing-conversions, bugprone-narrowing-conversions)
-        auto max_degree = std::max<int>(lhs.get_numerator().size(), lhs.get_denominator().size());
-        max_degree = std::max<int>(max_degree, rhs.get_numerator().size());
-        max_degree = std::max<int>(max_degree, rhs.get_denominator().size());
-        // NOLINTEND(cppcoreguidelines-narrowing-conversions, bugprone-narrowing-conversions)
-        max_degree--;
         while (sf <= PI_DIGITS) {
             auto lt = less_than(lhs, rhs, sf);
             if (lt) {
                 return *lt;
             }
-            sf += std::floor(std::log2(PI_DIGITS) - std::log2(sf) + 1);
+            sf *= 2;
         }
         std::cout << "Not enough pi digits to figure out which if " << lhs.to_string() << " < "
                   << rhs.to_string() << '\n';
@@ -542,9 +563,7 @@ namespace number {
 
     Index Index::make_ref(const Value& value, int length) { return {value, length}; }
 
-    const Value& Index::get_value() const {
-        return get_const_ref(m_value);
-    }
+    const Value& Index::get_value() const { return get_const_ref(m_value); }
 
     Index Index::clone() const {
         return {std::get<Value>(m_value)
