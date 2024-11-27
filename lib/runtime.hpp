@@ -669,7 +669,7 @@ namespace runtime {
                                     << from_ast<DEBUG>(std::move(e))->evaluate(gca)->debug_string(0)
                                     << ";\n";
                             } catch (const diag::RuntimeError& e) {
-                                std::cout << e.msg << '\n';
+                                std::cerr << e.msg << '\n';
                             }
                         }
                     } break;
@@ -680,7 +680,7 @@ namespace runtime {
                         std::string expr;
                         std::getline(std::cin, expr);
                         act = '\n';
-                        std::cout << "Unrecognized command.\n";
+                        std::cerr << "Unrecognized command.\n";
                     } break;
                     }
                     while (act != '\n') {
