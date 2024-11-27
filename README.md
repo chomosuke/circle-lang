@@ -23,8 +23,8 @@ Do `circle-lang <file-name>` to interpret a file.
 - Modify CmakeLists.txt
 
 ## Sample programs
-- [sample-program/hello_world.crcl](sample-program/hello_world.crcl)
-- [sample-program/postfix-calculator.crcl](sample-program/hello_world.crcl)
+- [sample-program/hello-world.crcl](sample-program/hello-world.crcl)
+- [sample-program/postfix-calculator.crcl](sample-program/postfix-calculator.crcl)
 
 ## Working with Circle Lang
 Check out [guide.md](guide.md) and [documentation.md](documentation.md).
