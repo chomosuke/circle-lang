@@ -33,18 +33,29 @@ int main(int argc, char* argv[]) {
     p.add(o::SRC_FILE, 1);
 
     po::variables_map vm;
-    po::store(po::command_line_parser(argc, argv).options(options).positional(p).run(), vm);
-    po::notify(vm);
-
-    if (vm.contains(o::HELP)) {
-        std::cout << "Usage: circle-lang <source file>\n" << visible;
+    try {
+        po::store(po::command_line_parser(argc, argv).options(options).positional(p).run(), vm);
+        po::notify(vm);
+    } catch (po::too_many_positional_options_error& e) {
+        std::cout << e.what() << '\n';
+        std ::cout << "More info with \"circle-lang --help\"" << '\n';
         return 1;
+    } catch (po::error_with_option_name& e) {
+        std::cout << e.what() << '\n';
+        std ::cout << "More info with \"circle-lang --help\"" << '\n';
+        return 1;
+    }
+
+    if (vm.contains(o::HELP) || src_fname.empty()) {
+        std::cout << "Usage: circle-lang [source file] [options]\n" << visible;
+        return 0;
     }
 
     std::ifstream src_file(src_fname);
     if (src_file.fail()) {
-        std::cout << "Can not open source file " << src_fname
-                  << ", please make sure that the file exist." << '\n';
+        std::cout << "Can not open source file \"" << src_fname
+                  << "\", please make sure that the file exist." << '\n';
+        std ::cout << "More info with \"circle-lang --help\"" << '\n';
         return 1;
     }
 
