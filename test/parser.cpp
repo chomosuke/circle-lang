@@ -1,15 +1,10 @@
 #include "lib/parser.cpp"
+#include "lib/utils.hpp"
 #include "test/sample_programs.hpp"
 #include "token_to_string.cpp"
 #include <gtest/gtest.h>
 #include <ostream>
 #include <sstream>
-
-void print_indent(std::ostream& ss, int indent) {
-    for (int i{0}; i < indent; i++) {
-        ss << "    ";
-    }
-}
 
 namespace de_double_bracket {
     void print(std::ostream& ss, const Node& n, int indent) {

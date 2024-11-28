@@ -4,6 +4,7 @@
 #include "macros.hpp"
 #include "number.hpp"
 #include "parser.hpp"
+#include "utils.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -117,11 +118,6 @@ namespace runtime {
     inline void throw_index_non_number(diag::Range range) {
         throw diag::RuntimeError{.msg{
             std::format("{} Attempting to index an array with a non number.", range.to_string())}};
-    }
-    inline void print_indent(std::stringstream& ss, int indent) {
-        for (auto i = 0; i < indent; i++) {
-            ss << "    ";
-        }
     }
 
     template <bool DEBUG> class Array : public Obj<DEBUG> {

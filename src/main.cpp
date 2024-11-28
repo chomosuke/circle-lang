@@ -1,4 +1,5 @@
 #include "lib/config.hpp"
+#include "lib/from_brainfuck.hpp"
 #include "lib/interpret.hpp"
 #include <boost/program_options.hpp>
 #include <fstream>
@@ -7,9 +8,10 @@
 namespace po = boost::program_options;
 
 namespace o {
-    constexpr char HELP[]{"help"};
-    constexpr char DEBUG[]("debug");
-    constexpr char SRC_FILE[]{"src-file"};
+    const char* const HELP = "help";
+    const char* const DEBUG = "debug";
+    const char* const FROM_BF = "from-bf";
+    const char* const SRC_FILE = "src-file";
 } // namespace o
 
 int main(int argc, char* argv[]) {
@@ -17,6 +19,8 @@ int main(int argc, char* argv[]) {
     po::options_description visible;
     visible.add_options()(o::HELP, "produce this help message");
     visible.add_options()(o::DEBUG, "run script with debugger");
+    visible.add_options()(o::FROM_BF,
+                          "treat input and Brainfuck code and transpile it to circle-lang");
 
     std::string src_fname{};
 
@@ -48,5 +52,9 @@ int main(int argc, char* argv[]) {
     src_code_s << src_file.rdbuf();
     std::string src_code = src_code_s.str();
 
-    interpret(src_code, std::cin, std::cout, std::cerr, Config{.debug{vm.contains(o::DEBUG)}});
+    if (vm.contains(o::FROM_BF)) {
+        std::cout << from_brainfuck(src_code);
+    } else {
+        interpret(src_code, std::cin, std::cout, std::cerr, Config{.debug{vm.contains(o::DEBUG)}});
+    }
 }
