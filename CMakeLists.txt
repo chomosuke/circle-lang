@@ -12,7 +12,7 @@ add_compile_options(
 )
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0 -fsanitize=address,undefined")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -static")
 
 project(circle-lang LANGUAGES CXX)
 
