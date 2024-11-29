@@ -7,6 +7,8 @@
 #include "utils.hpp"
 
 #include <algorithm>
+#include <cmath>
+#include <iomanip>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -69,9 +71,19 @@ namespace runtime {
         std::vector<std::string> m_lines;
 
       public:
-        explicit Debugger(const std::string& src_code) {
+        explicit Debugger(const std::string& src_code, std::ostream& out) {
             if constexpr (DEBUG) {
                 m_lines = split(src_code, "\n");
+                out << R"(Usage
+i: step into
+o: step out
+n: step over
+e <expr>: evaluate an expression
+g: prints the global circular array
+b <line-number>: set breakpoint
+c: continue
+
+)";
             }
         }
         void arr_enter() {
@@ -310,8 +322,8 @@ namespace runtime {
               m_lhs{std::make_unique<Index<DEBUG>>(std::move(*node.lhs.t), node.lhs.range)},
               m_rhs{from_ast<DEBUG>(std::move(node.rhs))} {}
 
-        void execute(Array<DEBUG>& gca, std::istream& /*in*/, std::ostream& /*out*/, std::ostream& /*err*/,
-                     Debugger<DEBUG>& /*debugger*/) override {
+        void execute(Array<DEBUG>& gca, std::istream& /*in*/, std::ostream& /*out*/,
+                     std::ostream& /*err*/, Debugger<DEBUG>& /*debugger*/) override {
             auto rhs = m_rhs->evaluate(gca);
             auto gca_loc = m_lhs->get_gca_location(gca);
             if (gca_loc) {
@@ -592,7 +604,7 @@ namespace runtime {
 
         void run(std::istream& in, std::ostream& out, std::ostream& err) {
             try {
-                auto debugger = Debugger<DEBUG>(m_src_code);
+                auto debugger = Debugger<DEBUG>(m_src_code, out);
                 m_code.execute(m_gca, in, out, err, debugger);
             } catch (const diag::RuntimeError& e) {
                 err << e.msg << '\n';
@@ -600,25 +612,18 @@ namespace runtime {
         }
     };
 
-    /*
-     * The debugger support step over, step into, and step out, where the things stepping in and out
-     * are Array executions.
-     * Pause every array element and prints out the current code being executed.
-     * i: step into
-     * o: step out
-     * n: step over
-     * e Expr: evaluate an expression
-     * b int: set breakpoint
-     * c: continue;
-     */
     template <bool DEBUG>
     void Debugger<DEBUG>::execute(const std::unique_ptr<Obj<DEBUG>>& obj, const Array<DEBUG>& gca,
                                   std::istream& in, std::ostream& out, std::ostream& err) {
         if constexpr (DEBUG) {
+            auto print_line = [&](int line) {
+                out << "line " << std::setw(std::log10(m_lines.size()) + 1) << line + 1 << ": "
+                    << m_lines[line] << '\n';
+            };
             auto range = obj->get_range();
             if (m_stepping_level.value_or(0) >= m_arr_level ||
                 (range && m_breakpoints.contains(range->start.line))) {
-                out << m_lines[range->start.line] << '\n';
+                print_line(range->start.line);
                 char act{0};
                 auto con = true;
                 while (con) {
@@ -646,7 +651,10 @@ namespace runtime {
                     case 'b': {
                         auto line = 0;
                         in >> line;
-                        m_breakpoints.insert(line - 1);
+                        line--;
+                        m_breakpoints.insert(line);
+                        out << "Setting breakpoint on ";
+                        print_line(line);
                     } break;
                     case 'e': {
                         std::string expr;
