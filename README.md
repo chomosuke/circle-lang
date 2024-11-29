@@ -1,6 +1,9 @@
 # Circle Lang: The perfect programming language
 
-Do `circle-lang <file-name>` to interpret a file.
+- Do `circle-lang <file-name>` to interpret a file.
+- Do `circle-lang <file-name> --debug` to debug a circle lang program.
+- Do `circle-lang <file-name> --from-bf` to transpile a Brainfuck program into a
+circle lang program.
 
 ## How to build and run this project
 
@@ -27,4 +30,4 @@ Do `circle-lang <file-name>` to interpret a file.
 - [sample-program/postfix-calculator.crcl](sample-program/postfix-calculator.crcl)
 
 ## Working with Circle Lang
-Check out [guide.md](guide.md) and [spec.md](spec.md).
+Check out [guide.md](guide.md) and [documentation.md](documentation.md).
