@@ -38,11 +38,11 @@ int main(int argc, char* argv[]) {
         po::notify(vm);
     } catch (po::too_many_positional_options_error& e) {
         std::cout << e.what() << '\n';
-        std ::cout << "More info with \"circle-lang --help\"" << '\n';
+        std::cout << "More info with \"circle-lang --help\"" << '\n';
         return 1;
     } catch (po::error_with_option_name& e) {
         std::cout << e.what() << '\n';
-        std ::cout << "More info with \"circle-lang --help\"" << '\n';
+        std::cout << "More info with \"circle-lang --help\"" << '\n';
         return 1;
     }
 
@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
     if (src_file.fail()) {
         std::cout << "Can not open source file \"" << src_fname
                   << "\", please make sure that the file exist." << '\n';
-        std ::cout << "More info with \"circle-lang --help\"" << '\n';
+        std::cout << "More info with \"circle-lang --help\"" << '\n';
         return 1;
     }
 

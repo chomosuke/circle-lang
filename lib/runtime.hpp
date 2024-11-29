@@ -261,7 +261,7 @@ c: continue
         std::optional<std::unique_ptr<Obj<DEBUG>>> m_subject;
         std::unique_ptr<Obj<DEBUG>> m_index;
         Index(std::optional<std::unique_ptr<Obj<DEBUG>>>&& subject,
-              std::unique_ptr<Obj<DEBUG>>&& index, std::optional<diag::Range> range)
+              std::unique_ptr<Obj<DEBUG>>&& index, diag::Range range)
             : Obj<DEBUG>{range}, m_subject{std::move(subject)}, m_index{std::move(index)} {}
 
       public:
@@ -276,12 +276,14 @@ c: continue
             auto index = m_index->evaluate(gca);
             auto* ind_num = dynamic_cast<Number<DEBUG>*>(index.get());
             if (ind_num == nullptr) {
+                assert(this->get_range());
                 throw_index_non_number(*this->get_range());
             }
             if (m_subject) {
                 auto* subject = dynamic_cast<Index*>(m_subject->get());
                 if (subject == nullptr) {
                     if (dynamic_cast<Array<DEBUG>*>(m_subject->get()) == nullptr) {
+                        assert(this->get_range());
                         throw_index_non_array(*this->get_range());
                     }
                     return std::nullopt;
@@ -289,11 +291,13 @@ c: continue
                 auto loc = subject->get_gca_location(gca);
                 // push back ind_num
                 if (loc) {
+                    assert(this->get_range());
                     loc->emplace_back(*ind_num->get_range(), ind_num->get_value().clone());
                 }
                 return loc;
             } else {
                 auto loc = std::vector<diag::WithInfo<number::Value>>();
+                assert(this->get_range());
                 loc.emplace_back(*ind_num->get_range(), ind_num->get_value().clone());
                 return loc;
             }
@@ -304,8 +308,9 @@ c: continue
             if (m_subject) {
                 subject = (*m_subject)->clone();
             }
+            assert(this->get_range());
             return std::unique_ptr<Index>(
-                new Index(std::move(subject), m_index->clone(), this->get_range()));
+                new Index(std::move(subject), m_index->clone(), *this->get_range()));
         }
 
         void execute(Array<DEBUG>& gca, std::istream& in, std::ostream& out, std::ostream& err,
@@ -321,11 +326,13 @@ c: continue
                 arr = dynamic_cast<Array<DEBUG>*>(subject.get());
             }
             if (arr == nullptr) {
+                assert(this->get_range());
                 throw_index_non_array(*this->get_range());
             }
             auto index = m_index->evaluate(gca);
             auto* ind_num = dynamic_cast<Number<DEBUG>*>(index.get());
             if (ind_num == nullptr) {
+                assert(this->get_range());
                 throw_index_non_number(*this->get_range());
             }
             return arr->index(ind_num->get_value())->evaluate(gca);
@@ -403,6 +410,7 @@ c: continue
             auto lhs = m_lhs->evaluate(gca);
             auto* l = dynamic_cast<Number<DEBUG>*>(lhs.get());
             if (l == nullptr || r == nullptr) {
+                assert(this->get_range());
                 throw diag::RuntimeError{.msg{std::format("{} Can not operate on non number",
                                                           this->get_range()->to_string())}};
             }
@@ -478,6 +486,7 @@ c: continue
             auto rhs = m_rhs->evaluate(gca);
             auto* r = dynamic_cast<Number<DEBUG>*>(rhs.get());
             if (r == nullptr) {
+                assert(this->get_range());
                 throw diag::RuntimeError{.msg{std::format("{} Can not operate on non number",
                                                           this->get_range()->to_string())}};
             }

@@ -1,5 +1,5 @@
 #!/bin/bash
-cmake --build build --target circle-lang
+cmake --build build-debug --target circle-lang
 exitcode=$?
 RED='\033[0;31m'
 NC='\033[0m'
@@ -8,4 +8,4 @@ if [ $exitcode -ne 0 ]; then
 	exit 1
 fi
 echo "compiled"
-./build/circle-lang "$@"
+./build-debug/circle-lang "$@"

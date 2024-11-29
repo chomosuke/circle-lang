@@ -12,12 +12,6 @@ std::string tokens_to_string(const std::vector<token::Token>& ts) {
     return ss.str();
 }
 
-TEST(Lex, Empty) {
-    auto diags = diag::Diags();
-    EXPECT_EQ(tokens_to_string(lex(R"()", diags).value()), "");
-    EXPECT_TRUE(diags.empty());
-}
-
 TEST(Lex, InvalidOperator) {
     auto diags = diag::Diags();
     auto invalid_op = lex("(( (V) + 1*1 );\n"

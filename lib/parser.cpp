@@ -22,7 +22,14 @@ namespace de_double_bracket {
         NON_COPIABLE(Node)
 
         std::vector<Element> elements;
-        explicit Node(std::vector<Element>&& elements) : elements(std::move(elements)) {}
+        explicit Node(std::vector<Element>&& elements, diag::Diags& diags, diag::Range range)
+            : elements(std::move(elements)) {
+            if (this->elements.empty()) {
+                diags.insert(diag::Diagnostic{.level{diag::error},
+                                              .range{range},
+                                              .message{"Zero sized array are not allowed"}});
+            }
+        }
     };
 
     std::optional<Node> parse(std::span<token::Token> tokens, diag::Diags& diags) {
@@ -52,10 +59,10 @@ namespace de_double_bracket {
                             }
                             auto start_range = open_b_ranges.back();
                             open_b_ranges.pop_back();
+                            auto range =
+                                diag::Range{.start{start_range.start}, .end{token.range.end}};
                             elements_stack.back().back().push_back(
-                                {.range{
-                                     diag::Range{.start{start_range.start}, .end{token.range.end}}},
-                                 .t{Node{std::move(elements)}}});
+                                {.range{range}, .t{Node{std::move(elements), diags, range}}});
                         } else {
                             diags.insert(diag::Diagnostic{.level{diag::error},
                                                           .range{token.range},
@@ -104,7 +111,7 @@ namespace de_double_bracket {
             // For tailing ;
             elements_stack.back().pop_back();
         }
-        return Node{std::move(elements_stack.back())};
+        return Node{std::move(elements_stack.back()), diags, diag::Range{}};
     }
 } // namespace de_double_bracket
 
