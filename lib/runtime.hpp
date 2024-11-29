@@ -69,12 +69,49 @@ namespace runtime {
         std::optional<int> m_stepping_level{1};
         std::unordered_set<int> m_breakpoints;
         std::vector<std::string> m_lines;
+        std::unordered_set<int> m_breakable;
+
+        void collect_breakable_any(const ast::Any& node) {
+            std::visit(
+                [&]<typename T>(const T& t) {
+                    static_assert(std::is_same_v<T, std::decay_t<T>>);
+                    if constexpr (std::is_same_v<T, ast::Array>) {
+                        collect_breakable(t);
+                    } else if constexpr (std::is_same_v<T, ast::Assign>) {
+                        collect_breakable_any(*t.rhs.t);
+                    } else if constexpr (std::is_same_v<T, ast::Index>) {
+                        const auto& subject = t.subject;
+                        if (subject) {
+                            collect_breakable_any(*subject->t);
+                        }
+                    } else if constexpr (std::is_same_v<T, ast::OperatorBinary> ||
+                                         std::is_same_v<T, ast::OperatorUnary> ||
+                                         std::is_same_v<T, ast::Number>) {
+                        // do nothing
+                    } else {
+                        static_assert(false, "Not exhaustive");
+                    }
+                },
+                std::move(node));
+        }
+
+        void collect_breakable(const ast::Array& node) {
+            for (const auto& e : node.elements) {
+                m_breakable.insert(e.range.start.line);
+                collect_breakable_any(*e.t);
+            }
+        }
 
       public:
-        explicit Debugger(const std::string& src_code, std::ostream& out) {
+        explicit Debugger(const ast::Array& code, const std::string& src_code) {
             if constexpr (DEBUG) {
                 m_lines = split(src_code, "\n");
-                out << R"(Usage
+                collect_breakable(code);
+            }
+        }
+        void print_instruction(std::ostream& out) {
+            if constexpr (DEBUG) {
+                out << R"(Usage:
 i: step into
 o: step out
 n: step over
@@ -230,9 +267,7 @@ c: continue
       public:
         Index(ast::Index&& node, diag::Range range)
             : Obj<DEBUG>(range),
-              m_subject{node.subject ? std::make_optional(from_ast<DEBUG>(
-                                           ast::convert_node_variants<ast::Indexable, ast::Any>(
-                                               std::move(*node.subject))))
+              m_subject{node.subject ? std::make_optional(from_ast<DEBUG>(std::move(*node.subject)))
                                      : std::nullopt},
               m_index{from_ast<DEBUG>(std::move(node.index))} {}
 
@@ -577,20 +612,20 @@ c: continue
 
     template <bool DEBUG> class Runtime {
       private:
+        Debugger<DEBUG> m_debugger;
         // glocal circular array
         Array<DEBUG> m_gca;
         Array<DEBUG> m_code;
-        const std::string& m_src_code;
 
       public:
         explicit Runtime(ast::Array&& code, const std::string& src_code)
-            : m_gca{static_cast<int>(code.elements.size()), std::nullopt},
+            : m_debugger{code, src_code},
+              m_gca{static_cast<int>(code.elements.size()), std::nullopt},
               m_code{std::move(code),
                      code.elements.empty()
                          ? diag::Range{.start{.line{0}, .column{0}}, .end{.line{0}, .column{0}}}
                          : diag::Range{.start{code.elements[0].range.start},
-                                       .end{code.elements.back().range.end}}},
-              m_src_code{src_code} {
+                                       .end{code.elements.back().range.end}}} {
             auto loc = std::vector<diag::WithInfo<number::Value>>();
             loc.emplace_back(diag::Range{}, number::Value("std_input"));
             m_gca.insert(std::move(loc), std::make_unique<StdInput<DEBUG>>());
@@ -604,8 +639,8 @@ c: continue
 
         void run(std::istream& in, std::ostream& out, std::ostream& err) {
             try {
-                auto debugger = Debugger<DEBUG>(m_src_code, out);
-                m_code.execute(m_gca, in, out, err, debugger);
+                m_debugger.print_instruction(out);
+                m_code.execute(m_gca, in, out, err, m_debugger);
             } catch (const diag::RuntimeError& e) {
                 err << e.msg << '\n';
             }
@@ -652,9 +687,14 @@ c: continue
                         auto line = 0;
                         in >> line;
                         line--;
-                        m_breakpoints.insert(line);
-                        out << "Setting breakpoint on ";
-                        print_line(line);
+                        if (m_breakable.contains(line)) {
+                            m_breakpoints.insert(line);
+                            out << "Setting breakpoint on ";
+                            print_line(line);
+                        } else {
+                            out << "Breakpoint rejected, no statement start on ";
+                            print_line(line);
+                        }
                     } break;
                     case 'e': {
                         std::string expr;

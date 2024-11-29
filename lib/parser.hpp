@@ -3,7 +3,6 @@
 #include "diagnostic.hpp"
 #include "macros.hpp"
 #include "number.hpp"
-#include "utils.hpp"
 #include <memory>
 #include <tl/expected.hpp>
 #include <variant>
@@ -19,9 +18,6 @@ namespace ast {
 
     using Any = std::variant<Array, Assign, Index, OperatorBinary, OperatorUnary, Number>;
 
-    // Assign will never be indexed due to operator precedence
-    using Indexable = std::variant<Array, Assign, Index, Number>;
-
     template <typename T> using Node = diag::WithInfo<std::unique_ptr<T>>;
 
     struct Array {
@@ -34,7 +30,7 @@ namespace ast {
     };
 
     struct Index {
-        std::optional<Node<Indexable>> subject;
+        std::optional<Node<Any>> subject;
         Node<Any> index;
     };
 
@@ -57,19 +53,6 @@ namespace ast {
         return diag::convert_with_info<std::unique_ptr<T1>, std::unique_ptr<T2>>(
             std::move(n),
             [](std::unique_ptr<T1>&& t) { return std::make_unique<T2>(std::move(*t)); });
-    }
-
-    template <typename T1, typename T2>
-    Node<T2> convert_node(Node<T1>&& n, std::function<T2(T1&&)> convertor) {
-        return diag::convert_with_info<std::unique_ptr<T1>, std::unique_ptr<T2>>(
-            std::move(n), [&](std::unique_ptr<T1>&& t) {
-                return std::make_unique<T2>(convertor(std::move(*t)));
-            });
-    }
-
-    template <typename T1, typename T2> Node<T2> convert_node_variants(Node<T1>&& n) {
-        return convert_node<T1, T2>(std::move(n),
-                                    [](T1&& n) -> T2 { return variant_cast(std::move(n)); });
     }
 } // namespace ast
 

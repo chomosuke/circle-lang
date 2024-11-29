@@ -266,21 +266,21 @@ namespace ast {
                         irs.push_back(IRBNA{.range{token->range}, .t{std::move(arr)}});
                     } else if constexpr (std::is_same_v<T, de_bracket::SingleBracket>) {
                         auto expr = parse_any(std::move(t.children), diags);
-                        auto last = std::optional<Node<Indexable>>();
+                        auto last = std::optional<Node<Any>>();
                         if (!irs.empty()) {
                             if (std::holds_alternative<Array>(irs.back().t)) {
                                 last = {.range{irs.back().range},
-                                        .t{std::make_unique<Indexable>(
+                                        .t{std::make_unique<Any>(
                                             std::move(std::get<Array>(irs.back().t)))}};
                             }
                             if (std::holds_alternative<Index>(irs.back().t)) {
                                 last = {.range{irs.back().range},
-                                        .t{std::make_unique<Indexable>(
+                                        .t{std::make_unique<Any>(
                                             std::move(std::get<Index>(irs.back().t)))}};
                             }
                             if (std::holds_alternative<Number>(irs.back().t)) {
                                 last = {.range{irs.back().range},
-                                        .t{std::make_unique<Indexable>(
+                                        .t{std::make_unique<Any>(
                                             std::move(std::get<Number>(irs.back().t)))}};
                             }
                         }

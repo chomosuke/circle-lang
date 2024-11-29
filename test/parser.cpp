@@ -272,8 +272,7 @@ namespace ast {
                 } else if constexpr (std::is_same_v<T, Index>) {
                     ss << "[";
                     if (t.subject) {
-                        print(ss, convert_node_variants<Indexable, Any>(std::move(*t.subject)),
-                              indent);
+                        print(ss, std::move(*t.subject), indent);
                     }
                     ss << "( ";
                     print(ss, std::move(t.index), indent);

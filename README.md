@@ -30,4 +30,4 @@ circle lang program.
 - [sample-program/postfix-calculator.crcl](sample-program/postfix-calculator.crcl)
 
 ## Working with Circle Lang
-Check out [guide.md](guide.md) and [documentation.md](documentation.md).
+Check out [documentation.md](documentation.md) and [guide.md](guide.md).
